@@ -1,6 +1,6 @@
 export const ignoredFolders = [
     {
-        name: '/usr/',
+        name: 'usr',
         fullPath: false
     },
     {
@@ -10,44 +10,44 @@ export const ignoredFolders = [
         name: '.local'
     },
     {
-        name: '/cores/'
+        name: 'cores'
     },
     {
-        name: '/sbin/'
+        name: 'sbin'
     },
     {
-        name: '/bin/'
+        name: 'bin'
     },
     {
-        name: '/AppData/'
+        name: 'AppData'
     },
 
     {
-        name: '/etc/'
+        name: 'etc'
     },
     {
-        name: '/Volumes/'
+        name: 'Volumes'
     },
     {
-        name: '/System/'
+        name: 'System'
     },
     {
-        name: '/private/',
+        name: 'private',
         fullPath: false
     },
     {
-        name: '/Library/'
+        name: 'Library'
     },
     {
-        name: '/Applications/',
+        name: 'Applications',
         fullPath: false
     },
     {
-        name: '/dev/',
+        name: 'dev',
         fullPath: true
     },
     {
-        name: '/node_modules/',
+        name: 'node_modules',
         fullPath: false
     }
 ];

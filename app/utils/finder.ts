@@ -27,6 +27,7 @@ const getWalker = (dir = '/', paused = true) => {
             return (
                 !dotFolders &&
                 !ignoredFolders.some(({ name, fullPath = false }) => {
+                    name = `${path.sep}${name}${path.sep}`;
                     if (!fullPath) {
                         return entry.fullPath.includes(name);
                     }
