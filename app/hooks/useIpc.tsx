@@ -78,7 +78,6 @@ export const useIpc = (): ReturnType => {
     const onScanDrives = (_, drives: string[]) => {
         setDrives(drives);
     };
-    console.log(ipcRenderer);
     const onProjectsDeleted = (_: any) => {};
     useEffect(() => {
         // logger.info('starting to listen to IPC');

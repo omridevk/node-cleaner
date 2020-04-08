@@ -9,6 +9,7 @@ import clsx from 'clsx';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ClearIcon from '@material-ui/icons/Clear';
 import SearchIcon from '@material-ui/icons/Search';
 import React, { useContext, useMemo, useState } from 'react';
@@ -127,6 +128,13 @@ export const Toolbar = React.forwardRef(
             totalSizeString,
             projects = []
         } = useContext(ProjectDataContext);
+
+        function cancelScan() {
+            dispatch(Messages.CANCEL_SCAN);
+            resetProjects!();
+            history.push('/home');
+        }
+
         const menuItems = useMemo(() => {
             const loading = state === State.loading;
             const finished = state === State.finished;
@@ -142,11 +150,7 @@ export const Toolbar = React.forwardRef(
                 },
                 {
                     title: 'Cancel',
-                    action: () => {
-                        dispatch(Messages.CANCEL_SCAN);
-                        resetProjects!();
-                        history.push('/home');
-                    }
+                    action: () => cancelScan()
                 },
                 {
                     title: 'Delete All',
@@ -202,6 +206,12 @@ export const Toolbar = React.forwardRef(
                         [classes.highlight]: numSelected > 0
                     })}
                 >
+                    <IconButton
+                        aria-label="delete selected"
+                        onClick={() => cancelScan()}
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
                     <Header numSelected={numSelected} />
                     {/* TODO:: UNCOMMENT THIS AND FIND A NICE LAYOUT}
                     {/*<Typography*/}
@@ -212,7 +222,10 @@ export const Toolbar = React.forwardRef(
                     {/*    scanning folder {currentFolder}*/}
                     {/*</Typography>*/}
                     <Typography
-                        className={clsx(classes.title, classes.actionsContainer)}
+                        className={clsx(
+                            classes.title,
+                            classes.actionsContainer
+                        )}
                         color="inherit"
                         variant="subtitle1"
                     >

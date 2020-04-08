@@ -58,9 +58,8 @@ export class DataManager {
         .pipe(tap(() => this.finder.cancel()));
 
     private _onScanEnd = this.finder.onScanEnd.pipe(
-        filter(Boolean),
-        switchMap(() => this.ipc.send(Messages.FINISHED_SCANNING)),
-        tap(() => logger.info('scan completed'))
+        tap(() => logger.info('scan completed')),
+        switchMap(() => this.ipc.send(Messages.FINISHED_SCANNING))
     );
 
     private _onUpdateProjects = this.finder.projects$.pipe(

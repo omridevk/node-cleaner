@@ -39,8 +39,6 @@ const getWalker = (dir = '/', paused = true) => {
 };
 
 export class Finder {
-
-
     private _walkers: ReaddirpStream[] = [];
 
     private _projects = new BehaviorSubject<ProjectData[]>([]);
@@ -61,9 +59,7 @@ export class Finder {
 
     private _startTime = 0;
 
-    constructor() {
-
-    }
+    constructor() {}
 
     scanDrives(): Observable<Drive[]> {
         return listDrives();
@@ -134,7 +130,7 @@ export class Finder {
     private _addListeners = () => {
         this._walkers.forEach(walker => {
             walker.on('data', this._handleOnScan);
-            walker.on('error', (e) => console.log(e));
+            walker.on('error', e => console.log(e));
             walker.on('end', this._handleOnScanEnd(walker));
         });
     };
