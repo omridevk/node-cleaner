@@ -1,0 +1,82 @@
+import React from 'react';
+import { FormControl } from '@material-ui/core';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import Checkbox from '@material-ui/core/Checkbox';
+import ListItemText from '@material-ui/core/ListItemText';
+import Input from '@material-ui/core/Input';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import { Drive } from '../../utils/list-drives';
+
+const useStyles = makeStyles(theme => ({
+    formControl: {
+        margin: theme.spacing(1),
+        minWidth: 120,
+        maxWidth: 300
+    },
+    chips: {
+        display: 'flex',
+        flexWrap: 'wrap'
+    },
+    chip: {
+        margin: 2
+    },
+    noLabel: {
+        marginTop: theme.spacing(3)
+    },
+    labelId: {}
+}));
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+    PaperProps: {
+        style: {
+            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+            width: 250
+        }
+    }
+};
+
+interface Props {
+    drives: Drive[];
+    selectedDrives: Drive[];
+    onChange: (drives: Drive[]) => void;
+}
+export const DriveSelector: React.FC<Props> = ({
+    drives,
+    onChange,
+    selectedDrives = []
+}) => {
+    const classes = useStyles();
+    return (
+        <FormControl className={classes.formControl}>
+            <InputLabel id={'drive-selector-label'}>Drives</InputLabel>
+            <Select
+                labelId={'drive-selector-label'}
+                id={'drive-selector'}
+                multiple
+                value={selectedDrives}
+                // TODO FIX THIS SOMEHOW
+                onChange={event => onChange(event.target.value as Drive[])}
+                input={<Input />}
+                renderValue={selected => {
+                    return (
+                        <span>
+                            {selected.map(({ name }) => name).join(', ')}
+                        </span>
+                    );
+                }}
+                MenuProps={MenuProps}
+            >
+                {drives.map(drive => (
+                    <MenuItem key={drive.path} value={drive}>
+                        <Checkbox checked={selectedDrives.includes(drive)} />
+                        <ListItemText primary={drive.name} />
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+    );
+};
