@@ -6,6 +6,8 @@ import Typography from '@material-ui/core/Typography';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
 import { SliderColumnFilter } from './SliderFilter';
+import { createStyles } from '@material-ui/core';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -18,6 +20,16 @@ function filterGreaterThan(
         return rowValue >= filterValue;
     });
 }
+
+const useStyles = makeStyles(() =>
+    createStyles({
+        cellText: {
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis'
+        }
+    })
+);
 
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
@@ -54,9 +66,7 @@ export default () =>
                 accessor: 'lastModified',
                 defaultCanFilter: false,
                 Cell: ({ row }: { row: Row<ProjectData> }) => (
-                    <Typography variant="subtitle1">
-                        {moment(row.original.lastModified).fromNow()}
-                    </Typography>
+                    <div>{moment(row.original.lastModified).fromNow()}</div>
                 ),
                 disableResizing: true
             },
@@ -65,15 +75,16 @@ export default () =>
                 accessor: 'description',
                 Cell: ({ row }: { row: Row<ProjectData> }) => {
                     const { original } = row;
+                    const classes = useStyles();
                     return (
                         <Tooltip
                             title={original.description || ''}
                             aria-label={original.description || ''}
                             placement="top"
                         >
-                            <Typography variant="subtitle1" noWrap>
+                            <div className={classes.cellText}>
                                 {original.description}
-                            </Typography>
+                            </div>
                         </Tooltip>
                     );
                 }
@@ -83,15 +94,16 @@ export default () =>
                 accessor: 'path',
                 Cell: ({ row }: { row: Row<ProjectData> }) => {
                     const { original } = row;
+                    const classes = useStyles();
                     return (
                         <Tooltip
                             title={original.path}
                             aria-label={original.path}
                             placement="top"
                         >
-                            <Typography variant="subtitle1" noWrap>
+                            <div className={classes.cellText}>
                                 {original.path}
-                            </Typography>
+                            </div>
                         </Tooltip>
                     );
                 }
