@@ -20,7 +20,7 @@ let walkers = 0;
 
 const getWalker = (dir = '/', paused = true) => {
     walkers++;
-    const reader = readdirp('/', {
+    const reader = readdirp(dir, {
         type: 'directories',
         directoryFilter: entry => {
             const dotFolders = /(\/\.\w+)/g.test(entry.fullPath);
