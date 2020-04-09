@@ -5,18 +5,25 @@ import { History } from 'history';
 import { ConnectedRouter } from 'connected-react-router';
 import { ProjectData } from '../types';
 import Routes from '../Routes';
-import { State, useIpc } from '../hooks/useIpc';
+// import { State, useIpc } from '../hooks/useIpc';
 import { CssBaseline, ThemeProvider } from '@material-ui/core';
 import { Drive } from '../utils/list-drives';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
 import { noop } from '../utils/helpers';
+import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
 
 const defaultContext = {
-    state: State.idle,
+    state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
     projects: [],
     darkMode: false,
     toggleDarkMode: noop,
+    deletedProjects: [],
+    startScan: (_: any) => {},
+    pauseScan: noop,
+    stopScan: noop,
+    deleteProjects: noop,
+    resumeScan: noop,
     currentFolder: '',
     drives: []
 };
@@ -25,12 +32,17 @@ export const ProjectDataContext = React.createContext<{
     projects?: ProjectData[];
     state: State;
     toggleDarkMode: () => void;
+    deletedProjects: ProjectData[];
     resetProjects?: () => void;
+    deleteProjects: (projects: ProjectData[]) => void;
     darkMode: boolean;
     drives: Drive[];
+    startScan: (dir: string | string[]) => void;
+    pauseScan: () => void;
+    stopScan: () => void;
+    resumeScan: () => void;
     totalSizeString?: string;
     currentFolder?: string;
-    dispatch?: (channel: string, ...args: any[]) => void;
 }>(defaultContext);
 
 type Props = {
@@ -53,13 +65,17 @@ const Root = ({ store, history }: Props) => {
     const [darkMode, setDarkMode] = useState(defaultContext.darkMode);
     const {
         projects,
-        dispatch,
+        resumeScan,
+        pauseScan,
+        stopScan,
+        startScan,
+        deleteProjects,
         resetProjects,
+        deletedProjects,
         state,
         drives,
-        totalSizeString,
-        currentFolder
-    } = useIpc();
+        totalSizeString
+    } = useScan();
     return (
         <>
             <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -68,11 +84,16 @@ const Root = ({ store, history }: Props) => {
                     value={{
                         drives,
                         darkMode,
+                        resumeScan,
+                        startScan,
+                        deleteProjects,
+                        deletedProjects,
+                        stopScan,
+                        pauseScan,
                         toggleDarkMode: () =>
                             setDarkMode(prevState => !prevState),
                         resetProjects,
                         projects,
-                        dispatch,
                         state,
                         totalSizeString
                     }}

@@ -6,7 +6,6 @@ import Grid from '@material-ui/core/Grid';
 import { ScanButton } from './ScanButton';
 import { Scan, ScanSelection, ScanType } from './ScanSelection';
 import { FolderInput } from './FolderInput';
-import { head } from 'ramda';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
 import { isDarwin } from '../../constants';

@@ -103,7 +103,7 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const classes = useStyles();
-    const { projects = [] } = useContext(ProjectDataContext);
+    const { projects = [], deletedProjects } = useContext(ProjectDataContext);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const filterTypes = React.useMemo(
         () => ({
@@ -254,7 +254,6 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             ]);
         }
     );
-    const { deletedProjects } = useProjectsDeleted();
     const deletedTotalSize = useMemo(
         () => formatByBytes(sum(map(prop('size'), deletedProjects))),
         [deletedProjects]

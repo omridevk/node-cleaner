@@ -186,6 +186,7 @@
         "@types/react-table": "^7.0.13",
         "@types/react-test-renderer": "^16.9.2",
         "@types/redux-logger": "^3.0.7",
+        "@types/rimraf": "^3.0.0",
         "@types/sinon": "^7.5.2",
         "@types/tapable": "^1.0.5",
         "@types/vfile-message": "^2.0.0",
@@ -287,6 +288,8 @@
         "react-table": "^7.0.4",
         "redux": "^4.0.5",
         "redux-thunk": "^2.3.0",
+        "rimraf": "^3.0.2",
+        "rxjs": "^6.5.5",
         "source-map-support": "^0.5.16",
         "sudo-prompt": "^9.1.1"
     },

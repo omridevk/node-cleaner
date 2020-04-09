@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -6,8 +6,6 @@ import { createStyles } from '@material-ui/core';
 import { Row } from 'react-table';
 import { ProjectData } from '../../types';
 import Alert from '@material-ui/lab/Alert';
-import { ProjectDataContext } from '../../containers/Root';
-import { State } from '../../hooks/useIpc';
 
 const useStyles = makeStyles(() =>
     createStyles({

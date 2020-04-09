@@ -1,14 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Projects } from '../modules';
 import Snackbar from '@material-ui/core/Snackbar';
-import { State } from '../hooks/useIpc';
 import DeleteProjectsDialog from '../modules/projects/DeleteProjectsDialog';
-import { Messages } from '../enums/messages';
 import { ProjectData } from '../types';
-import { noop } from '../utils/helpers';
 import { ProjectDataContext } from './Root';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import { useLocation } from 'react-router';
+import { ScanState } from '../hooks/useScan';
 
 const Alert = (props: AlertProps) => (
     <MuiAlert elevation={6} variant="filled" {...props} />
@@ -18,13 +16,15 @@ export default function ProjectPage() {
     const {
         projects = [],
         state,
-        dispatch = noop,
+        deleteProjects,
+        startScan,
         totalSizeString
     } = useContext(ProjectDataContext);
     const location = useLocation<{ directories: string[] }>();
+    const {scanning} = state;
     let directories = location.state.directories;
     useEffect(() => {
-        dispatch(Messages.START_SCANNING, directories);
+        startScan(directories);
     }, []);
     // directory = directory!.toString();
     const [deleted, setDeleted] = useState<ProjectData[]>([]);
@@ -35,9 +35,10 @@ export default function ProjectPage() {
         setDeleted(projects);
         setShowDialog(true);
     }
+    const finished = scanning === ScanState.Finished;
 
     useEffect(() => {
-        if (state !== State.finished) {
+        if (finished) {
             return;
         }
         setShowSnackbar(true);
@@ -47,7 +48,7 @@ export default function ProjectPage() {
         <>
             <Snackbar
                 onClose={() => setShowSnackbar(false)}
-                open={state === State.finished && showSnackbar}
+                open={finished && showSnackbar}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                 autoHideDuration={4000}
             >
@@ -64,7 +65,7 @@ export default function ProjectPage() {
                 projects={deleted}
                 handleAgree={() => {
                     setShowDialog(false);
-                    dispatch(Messages.DELETE_PROJECTS, deleted);
+                    deleteProjects(deleted);
                 }}
             />
             <Projects onDeleteProjects={onDeleteProjects} />

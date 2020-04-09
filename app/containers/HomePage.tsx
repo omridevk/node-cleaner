@@ -1,15 +1,9 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { Home } from '../modules';
 import { ProjectDataContext } from './Root';
-import { noop } from '../utils/helpers';
-import { Messages } from '../enums/messages';
 
 export default function HomePage() {
-    const { dispatch = noop, drives} = useContext(ProjectDataContext);
-
-    useEffect(() => {
-        dispatch(Messages.START_SCAN_DRIVES);
-    }, []);
+    const { drives } = useContext(ProjectDataContext);
 
     return <Home drives={drives} />;
 }
