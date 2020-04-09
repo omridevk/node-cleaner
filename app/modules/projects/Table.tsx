@@ -35,9 +35,9 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import { formatByBytes } from '../../utils/helpers';
-import * as sum from 'ramda/src/sum';
-import * as map from 'ramda/src/map';
-import * as prop from 'ramda/src/prop';
+import sum from 'ramda/src/sum';
+import map from 'ramda/src/map';
+import prop from 'ramda/src/prop';
 
 // const animation = (reverseIt = false) => ({
 //     opacity: reverseIt ? reverse([0.5, 1, 1, 0.5, 0.5]) : [0.5, 1, 1, 0.5, 0.5]

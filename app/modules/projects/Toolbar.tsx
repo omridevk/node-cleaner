@@ -5,6 +5,8 @@ import * as R from 'ramda';
 import Typography from '@material-ui/core/Typography';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import MaUToolbar from '@material-ui/core/Toolbar';
+import Brightness4Icon from '@material-ui/icons/Brightness4';
+import Brightness7Icon from '@material-ui/icons/Brightness7';
 import clsx from 'clsx';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
@@ -125,6 +127,8 @@ export const Toolbar = React.forwardRef(
             dispatch = noop,
             state,
             resetProjects,
+            toggleDarkMode,
+            darkMode,
             totalSizeString,
             projects = []
         } = useContext(ProjectDataContext);
@@ -206,12 +210,14 @@ export const Toolbar = React.forwardRef(
                         [classes.highlight]: numSelected > 0
                     })}
                 >
-                    <IconButton
-                        aria-label="delete selected"
-                        onClick={() => cancelScan()}
-                    >
-                        <ArrowBackIcon />
-                    </IconButton>
+                    <Tooltip title={'Back'}>
+                        <IconButton
+                            aria-label="delete selected"
+                            onClick={() => cancelScan()}
+                        >
+                            <ArrowBackIcon />
+                        </IconButton>
+                    </Tooltip>
                     <Header numSelected={numSelected} />
                     {/* TODO:: UNCOMMENT THIS AND FIND A NICE LAYOUT}
                     {/*<Typography*/}
@@ -251,6 +257,15 @@ export const Toolbar = React.forwardRef(
                             </Tooltip>
                         ) : null}
                         <MoreMenu tooltip={'More Actions'} items={menuItems} />
+                        <Tooltip title={'Toggle Light/Dark Theme'}>
+                            <IconButton onClick={toggleDarkMode}>
+                                {darkMode ? (
+                                    <Brightness7Icon />
+                                ) : (
+                                    <Brightness4Icon />
+                                )}
+                            </IconButton>
+                        </Tooltip>
                     </div>
                 </MaUToolbar>
             </>
