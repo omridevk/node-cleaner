@@ -20,6 +20,7 @@ import { DefaultColumnFilter } from './columns';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
+import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
@@ -38,6 +39,10 @@ import { formatByBytes } from '../../utils/helpers';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
+import Container from '@material-ui/core/Container';
+import { shell } from 'electron';
+import { isDarwin } from '../../constants';
+import Grid from '@material-ui/core/Grid';
 
 // const animation = (reverseIt = false) => ({
 //     opacity: reverseIt ? reverse([0.5, 1, 1, 0.5, 0.5]) : [0.5, 1, 1, 0.5, 0.5]
@@ -204,18 +209,46 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     disableResizing: true,
                     Header: () => 'Actions',
                     Cell: ({ row }) => (
-                        <Tooltip title="Delete" placement="top">
-                            <span>
-                                <IconButton
-                                    aria-label="delete"
-                                    onClick={() => {
-                                        onDeleteRow(row.original);
-                                    }}
+                        <Container>
+                            <Grid
+                                container
+                                wrap={'nowrap'}
+                                direction="row"
+                                justify="flex-end"
+                            >
+                                <Tooltip title="Delete" placement="top">
+                                    <span>
+                                        <IconButton
+                                            aria-label="delete"
+                                            onClick={() => {
+                                                onDeleteRow(row.original);
+                                            }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip
+                                    title={`Open in ${
+                                        isDarwin ? 'finder' : 'file explorer'
+                                    }`}
+                                    placement="top"
                                 >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </span>
-                        </Tooltip>
+                                    <span>
+                                        <IconButton
+                                            aria-label={``}
+                                            onClick={() => {
+                                                shell.openItem(
+                                                    row.original.path
+                                                );
+                                            }}
+                                        >
+                                            <FolderOpenIcon />
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                            </Grid>
+                        </Container>
                     )
                 }
             ]);
