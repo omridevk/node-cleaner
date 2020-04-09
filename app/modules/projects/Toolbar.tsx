@@ -124,14 +124,15 @@ export const Toolbar = React.forwardRef(
         const {
             dispatch = noop,
             state,
-            resetProjects,
+            stopScan,
+            pauseScan,
+            resumeScan,
             totalSizeString,
             projects = []
         } = useContext(ProjectDataContext);
 
         function cancelScan() {
-            dispatch(Messages.CANCEL_SCAN);
-            resetProjects!();
+            stopScan();
             history.push('/home');
         }
 
@@ -142,9 +143,11 @@ export const Toolbar = React.forwardRef(
                 {
                     title: loading ? 'Pause' : 'Resume',
                     action: () => {
-                        dispatch(
-                            loading ? Messages.PAUSE_SCAN : Messages.RESUME_SCAN
-                        );
+                        if (loading) {
+                            pauseScan();
+                            return;
+                        }
+                        resumeScan();
                     },
                     disabled: finished
                 },
@@ -194,7 +197,7 @@ export const Toolbar = React.forwardRef(
                     projects={projects}
                     handleAgree={() => {
                         setShowDeleteModal(false);
-                        dispatch(Messages.DELETE_PROJECTS, projects);
+                        // dispatch(Messages.DELETE_PROJECTS, projects);
                     }}
                     handleModalClosed={() => {
                         setShowDeleteModal(false);

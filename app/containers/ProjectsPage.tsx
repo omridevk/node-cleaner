@@ -15,16 +15,14 @@ const Alert = (props: AlertProps) => (
 );
 
 export default function ProjectPage() {
-    const {
-        projects = [],
-        state,
-        dispatch = noop,
-        totalSizeString
-    } = useContext(ProjectDataContext);
+    const { projects = [], state, startScan, totalSizeString} = useContext(
+        ProjectDataContext
+    );
     const location = useLocation<{ directories: string[] }>();
-    let directories = location.state.directories;
+    const directories = location.state.directories;
     useEffect(() => {
-        dispatch(Messages.START_SCANNING, directories);
+        startScan(directories);
+        // dispatch(Messages.START_SCANNING, directories);
     }, []);
     // directory = directory!.toString();
     const [deleted, setDeleted] = useState<ProjectData[]>([]);
@@ -64,7 +62,7 @@ export default function ProjectPage() {
                 projects={deleted}
                 handleAgree={() => {
                     setShowDialog(false);
-                    dispatch(Messages.DELETE_PROJECTS, deleted);
+                    // dispatch(Messages.DELETE_PROJECTS, deleted);
                 }}
             />
             <Projects onDeleteProjects={onDeleteProjects} />

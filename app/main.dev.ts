@@ -72,12 +72,12 @@ const createWindow = async () => {
         icon: appIcon,
         webPreferences: { nodeIntegration: true }
     });
-    let dataManager: DataManager;
-    dataManager = new DataManager(
-        new Finder(),
-        new Ipc(mainWindow as BrowserWindow)
-    );
-    dataManager.scan();
+    // let dataManager: DataManager;
+    // dataManager = new DataManager(
+    //     new Finder(),
+    //     new Ipc(mainWindow as BrowserWindow)
+    // );
+    // dataManager.scan();
     mainWindow.loadURL(`file://${__dirname}/app.html`);
 
     // @TODO: Use 'ready-to-show' event

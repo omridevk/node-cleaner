@@ -8,23 +8,32 @@ import Routes from '../Routes';
 import { State, useIpc } from '../hooks/useIpc';
 import { CssBaseline } from '@material-ui/core';
 import { Drive } from '../utils/list-drives';
+import { useIpcV2 } from '../hooks/useIpcV2';
 
 const defaultContext = {
     state: State.idle,
     projects: [],
     currentFolder: '',
+    startScan: (_: any) => {},
     drives: []
 };
-
-export const ProjectDataContext = React.createContext<{
+export interface ProjectContext {
     projects?: ProjectData[];
     state: State;
     resetProjects?: () => void;
+    startScan: (dir: string | string[]) => void;
+    pauseScan: () => void;
+    stopScan: () => void;
+    resumeScan: () => void;
     drives: Drive[];
     totalSizeString?: string;
     currentFolder: string;
-    dispatch?: (channel: string, ...args: any[]) => void;
-}>(defaultContext);
+    // dispatch?: (channel: string, ...args: any[]) => void;
+}
+
+export const ProjectDataContext = React.createContext<ProjectContext>(
+    defaultContext
+);
 
 type Props = {
     store: any;
@@ -34,23 +43,34 @@ type Props = {
 const Root = ({ store, history }: Props) => {
     const {
         projects,
-        dispatch,
-        resetProjects,
-        state,
+        startScan,
+        stopScan,
         drives,
+        resumeScan,
+        resetProjects,
         totalSizeString,
-        currentFolder
-    } = useIpc();
+        pauseScan,
+        state
+    } = useIpcV2();
+    // const {
+    //     // projects,
+    //     // dispatch,
+    //
+    //     currentFolder
+    // } = useIpc();
     return (
         <>
             <CssBaseline />
             <ProjectDataContext.Provider
                 value={{
+                    startScan,
+                    stopScan,
+                    resumeScan,
+                    pauseScan,
                     drives,
-                    currentFolder,
+                    // currentFolder,
                     resetProjects,
                     projects,
-                    dispatch,
                     state,
                     totalSizeString
                 }}
