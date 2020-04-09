@@ -1,12 +1,23 @@
-import { filter, map, sample, switchMap, take, tap } from 'rxjs/operators';
-import { forkJoin, interval, Subscription } from 'rxjs';
+import {
+    map,
+    sample,
+    switchMap,
+    take,
+    tap,
+    retry,
+    catchError
+} from 'rxjs/operators';
+import { forkJoin, interval, Subscription, EMPTY } from 'rxjs';
 import { Finder } from './finder';
 import { Ipc } from './ipc';
 import { Messages } from '../enums/messages';
 import { ProjectData } from '../types';
+import path from 'path';
 import * as R from 'ramda';
 import * as electronLog from 'electron-log';
 import chalk from 'chalk';
+import { exec } from './exec';
+
 
 export class DataManager {
     constructor(private finder: Finder, private ipc: Ipc) {}
@@ -86,37 +97,42 @@ export class DataManager {
         .pipe(
             map(({ data: projects }) => ({
                 paths: projects
-                    .map(project => `${project.path}/node_modules`)
-                    .join('" "'),
+                    .map(
+                        project => `"${path.join(project.path, 'node_modules')}"`
+                    )
+                    .join(' '),
                 projects
             })),
             tap(({ paths }) => {
-                logger.info(`will execute: rm -rf "${paths}"`);
+                logger.info(`will execute: rm -rf ${paths}`);
             }),
             // TODO uncomment that when we are ready to actually delete stuff
-            // switchMap(({projects, paths}) =>
-            //     exec(`rm -rf ${paths}`, {
-            //         name: 'Node Cleaner'
-            //     }).pipe(
-            //         tap(() =>
-            //             logger.info(
-            //                 chalk.black(
-            //                     `removing projects ${chalk.redBright(
-            //                         projects.join(" , ")
-            //                     )}`
-            //                 )
-            //             )
-            //         ),
-            //         catchError(error => {
-            //             console.error(
-            //                 `error removing projects`,
-            //                 chalk.redBright(error.message)
-            //             );
-            //             return EMPTY;
-            //         }),
-            //         retry()
-            //     )
-            // ),
+            switchMap(({ projects, paths }) =>
+                exec(`rm -rf ${paths}`, {
+                    name: 'Node Cleaner'
+                }).pipe(
+                    tap(() =>
+                        logger.info(
+                            chalk.yellowBright(
+                                `removing projects ${chalk.redBright(
+                                    projects
+                                        .map(project => project.name)
+                                        .join(' , ')
+                                )}`
+                            )
+                        )
+                    ),
+                    catchError(error => {
+                        console.error(
+                            `error removing projects`,
+                            chalk.redBright(error.message)
+                        );
+                        return EMPTY;
+                    }),
+                    map(() => ({ projects, paths })),
+                    retry()
+                )
+            ),
             switchMap(({ projects: deletedProjects }) =>
                 this.ipc
                     .send(Messages.PROJECTS_DELETED, deletedProjects)
