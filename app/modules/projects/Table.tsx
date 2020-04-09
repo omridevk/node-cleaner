@@ -103,7 +103,7 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const classes = useStyles();
-    const { projects = [] } = useContext(ProjectDataContext);
+    const { projects = [], deletedProjects } = useContext(ProjectDataContext);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const filterTypes = React.useMemo(
         () => ({
@@ -157,6 +157,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         setGlobalFilter,
         toggleAllRowsSelected,
         prepareRow,
+        toggleRowSelected,
         selectedFlatRows,
         state: { selectedRowIds, globalFilter }
     } = useTable(
@@ -220,7 +221,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                                     <span>
                                         <IconButton
                                             aria-label="delete"
-                                            onClick={() => {
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 onDeleteRow(row.original);
                                             }}
                                         >
@@ -237,7 +240,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                                     <span>
                                         <IconButton
                                             aria-label={``}
-                                            onClick={() => {
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 shell.openItem(
                                                     row.original.path
                                                 );
@@ -254,7 +259,6 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             ]);
         }
     );
-    const { deletedProjects } = useProjectsDeleted();
     const deletedTotalSize = useMemo(
         () => formatByBytes(sum(map(prop('size'), deletedProjects))),
         [deletedProjects]
@@ -350,7 +354,11 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     ))}
                 </TableHead>
                 <TableBody>
-                    <Rows rows={rows} prepareRow={prepareRow} />
+                    <Rows
+                        rows={rows}
+                        toggleRowSelected={toggleRowSelected}
+                        prepareRow={prepareRow}
+                    />
                 </TableBody>
             </MaUTable>
         </>

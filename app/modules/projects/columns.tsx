@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { FilterValue, IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
-import Typography from '@material-ui/core/Typography';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
 import { SliderColumnFilter } from './SliderFilter';
@@ -65,6 +64,7 @@ export default () =>
                 Header: 'Last modified',
                 accessor: 'lastModified',
                 defaultCanFilter: false,
+                sortType: 'datetime',
                 Cell: ({ row }: { row: Row<ProjectData> }) => (
                     <div>{moment(row.original.lastModified).fromNow()}</div>
                 ),

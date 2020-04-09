@@ -71,6 +71,10 @@ export class Finder {
 
     private _startTime = 0;
 
+    public isDestroyed() {
+        return this._walkers.some(walker => walker.destroyed);
+    }
+
     constructor() {}
 
     scanDrives(): Observable<Drive[]> {
@@ -132,6 +136,7 @@ export class Finder {
         }
         this._removeListeners();
         this._walkers.forEach(walker => walker.destroy());
+        this._walkers = [];
     }
 
     private _handleOnScanEnd = (toRemove: ReaddirpStream) => () => {

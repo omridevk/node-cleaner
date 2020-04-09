@@ -1,6 +1,6 @@
 import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
-import { formatByBytes, noop } from '../../utils/helpers';
+import { formatByBytes } from '../../utils/helpers';
 import * as R from 'ramda';
 import Typography from '@material-ui/core/Typography';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -20,12 +20,11 @@ import { createStyles, lighten, Theme } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
-import { Messages } from '../../enums/messages';
 import withStyles from '@material-ui/core/styles/withStyles';
-import { State } from '../../hooks/useIpc';
 import { MoreMenu } from '../../common/MoreMenu';
 import { useHistory } from 'react-router';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
+import { DeleteState, ScanState } from '../../hooks/useScan';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -50,7 +49,15 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
             paddingLeft: theme.spacing(1.5),
-            paddingRight: theme.spacing(10)
+            paddingRight: theme.spacing(10),
+            zIndex: 100,
+            position: 'sticky',
+            borderBottom: 'solid 1px rgba(0, 0, 0, 0.12)',
+            top: 0,
+            backgroundColor:
+                theme.palette.type === 'light'
+                    ? 'rgba(227, 227, 227, 0.85)'
+                    : theme.palette.primary.dark
         },
         actionsContainer: {
             display: 'flex'
@@ -124,31 +131,34 @@ export const Toolbar = React.forwardRef(
         const history = useHistory();
         const [showDeleteModal, setShowDeleteModal] = useState(false);
         const {
-            dispatch = noop,
+            stopScan,
+            pauseScan,
+            resumeScan,
             state,
+            deleteProjects,
             resetProjects,
             toggleDarkMode,
             darkMode,
             totalSizeString,
             projects = []
         } = useContext(ProjectDataContext);
-
+        const { scanning, deleting } = state;
         function cancelScan() {
-            dispatch(Messages.CANCEL_SCAN);
+            stopScan();
             resetProjects!();
             history.push('/home');
         }
+        const loading =
+            scanning === ScanState.Loading || deleting === DeleteState.Deleting;
+        const finished = scanning === ScanState.Finished;
 
         const menuItems = useMemo(() => {
-            const loading = state === State.loading;
-            const finished = state === State.finished;
             return [
                 {
                     title: loading ? 'Pause' : 'Resume',
                     action: () => {
-                        dispatch(
-                            loading ? Messages.PAUSE_SCAN : Messages.RESUME_SCAN
-                        );
+                        const fn = loading ? pauseScan : resumeScan;
+                        fn();
                     },
                     disabled: finished
                 },
@@ -163,8 +173,7 @@ export const Toolbar = React.forwardRef(
                     }
                 }
             ];
-        }, [state]);
-        const loading = state === State.loading;
+        }, [scanning]);
         const numSelected = Object.keys(selectedRowIds).length;
         const totalSelectedSize = useMemo(() => {
             return formatByBytes(
@@ -198,7 +207,8 @@ export const Toolbar = React.forwardRef(
                     projects={projects}
                     handleAgree={() => {
                         setShowDeleteModal(false);
-                        dispatch(Messages.DELETE_PROJECTS, projects);
+                        deleteProjects(projects);
+                        // dispatch(Messages.DELETE_PROJECTS, projects);
                     }}
                     handleModalClosed={() => {
                         setShowDeleteModal(false);
