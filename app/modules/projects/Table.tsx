@@ -157,6 +157,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         setGlobalFilter,
         toggleAllRowsSelected,
         prepareRow,
+        toggleRowSelected,
         selectedFlatRows,
         state: { selectedRowIds, globalFilter }
     } = useTable(
@@ -220,7 +221,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                                     <span>
                                         <IconButton
                                             aria-label="delete"
-                                            onClick={() => {
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 onDeleteRow(row.original);
                                             }}
                                         >
@@ -237,7 +240,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                                     <span>
                                         <IconButton
                                             aria-label={``}
-                                            onClick={() => {
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 shell.openItem(
                                                     row.original.path
                                                 );
@@ -349,7 +354,11 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     ))}
                 </TableHead>
                 <TableBody>
-                    <Rows rows={rows} prepareRow={prepareRow} />
+                    <Rows
+                        rows={rows}
+                        toggleRowSelected={toggleRowSelected}
+                        prepareRow={prepareRow}
+                    />
                 </TableBody>
             </MaUTable>
         </>

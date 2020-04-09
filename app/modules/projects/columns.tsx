@@ -64,6 +64,7 @@ export default () =>
                 Header: 'Last modified',
                 accessor: 'lastModified',
                 defaultCanFilter: false,
+                sortType: 'datetime',
                 Cell: ({ row }: { row: Row<ProjectData> }) => (
                     <div>{moment(row.original.lastModified).fromNow()}</div>
                 ),
