@@ -47,7 +47,7 @@ const BorderLinearProgress = withStyles({
 const useToolbarStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
-            paddingLeft: theme.spacing(3.5),
+            paddingLeft: theme.spacing(1.5),
             paddingRight: theme.spacing(10)
         },
         actionsContainer: {

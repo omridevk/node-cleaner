@@ -20,7 +20,11 @@ const useStyles = makeStyles(() =>
         containerRoot: {
             height: '100%'
         },
-        settingsContainer: {}
+        settingsContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+        }
     })
 );
 
@@ -51,7 +55,6 @@ export default function Home({ drives }: Props) {
     }, [drives, scan]);
 
     const scans = useMemo(() => {
-
         return [
             {
                 type: ScanType.All,
@@ -64,7 +67,7 @@ export default function Home({ drives }: Props) {
             {
                 type: ScanType.Drives,
                 title: 'Drives',
-                visible: drives.length > 1,
+                visible: drives.length > 1
             }
         ];
     }, [drives]);
@@ -72,8 +75,8 @@ export default function Home({ drives }: Props) {
     function handleScanChanged(scan: Scan) {
         setScan(scan);
     }
-    function handleFolderChanged(folder: string) {
-        setDirectories([folder]);
+    function handleFolderChanged(folders: string[]) {
+        setDirectories(folders);
     }
     function handleDriveChanged(drives: Drive[]) {
         setDirectories(drives.map(({ path }) => path));
@@ -112,7 +115,7 @@ export default function Home({ drives }: Props) {
                     />
                     {scan.type === ScanType.Folder && (
                         <FolderInput
-                            directory={head(directories)!}
+                            directories={directories}
                             onChange={handleFolderChanged}
                         />
                     )}

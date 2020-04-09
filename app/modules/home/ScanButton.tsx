@@ -31,8 +31,7 @@ const useStyles = makeStyles(() =>
             textDecoration: 'none'
         },
         container: {
-            maxWidth: '40%',
-            minWidth: '230px'
+            minWidth: '200px'
         }
     })
 );
@@ -88,7 +87,7 @@ export const ScanButton = ({ directories, disabled = false }: Props) => {
                 className={classes.link}
             >
                 <Button disabled={disabled} className={classes.extendedFab}>
-                    <Typography className={classes.fabText} variant="h2">
+                    <Typography className={classes.fabText} variant="h4">
                         Scan
                     </Typography>
                 </Button>
