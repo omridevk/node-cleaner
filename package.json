@@ -52,8 +52,8 @@
         ]
     },
     "build": {
-        "productName": "ElectronReact",
-        "appId": "org.develar.ElectronReact",
+        "productName": "Node Cleaner",
+        "appId": "org.develar.NodeCleaner",
         "files": [
             "dist/",
             "node_modules/",
@@ -96,8 +96,8 @@
         },
         "publish": {
             "provider": "github",
-            "owner": "electron-react-boilerplate",
-            "repo": "electron-react-boilerplate",
+            "owner": "node-cleaner",
+            "repo": "node-cleaner",
             "private": false
         }
     },
@@ -123,14 +123,9 @@
     "homepage": "https://github.com/omridevk",
     "contributors": [
         {
-            "name": "Vikram Rangaraj",
-            "email": "vikr01@icloud.com",
-            "url": "https://github.com/vikr01"
-        },
-        {
-            "name": "Amila Welihinda",
-            "email": "amilajack@gmail.com",
-            "url": "https://github.com/amilajack"
+            "name": "Omri Katz",
+            "email": "omrikatz12@gmail.com",
+            "url": "https://github.com/omridevk"
         }
     ],
     "jest": {

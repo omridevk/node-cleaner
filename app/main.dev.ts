@@ -17,6 +17,12 @@ import { DataManager } from './utils/data-manager';
 import { Finder } from './utils/finder';
 import { Ipc } from './utils/ipc';
 
+
+const appIcon =
+    process.platform === 'darwin'
+        ? path.join(__dirname, '../resources/icon.png')
+        : path.join(__dirname, '../resources/icon.png');
+
 export default class AppUpdater {
     constructor() {
         log.transports.file.level = 'info';
@@ -63,6 +69,7 @@ const createWindow = async () => {
         show: false,
         width: 1024,
         height: 728,
+        icon: appIcon,
         webPreferences: { nodeIntegration: true }
     });
     let dataManager: DataManager;

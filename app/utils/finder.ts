@@ -4,7 +4,15 @@ import fs from 'fs-extra';
 import path from 'path';
 import readdirp, { ReaddirpStream } from 'readdirp';
 import chalk from 'chalk';
-import { delay, filter, map, switchMap, take, tap } from 'rxjs/operators';
+import {
+    delay,
+    filter,
+    map,
+    switchMap,
+    take,
+    tap,
+    takeUntil
+} from 'rxjs/operators';
 import * as R from 'ramda';
 import { ProjectData } from '../types';
 import { checkUnix, checkWin32 } from './check-size';
@@ -50,6 +58,9 @@ export class Finder {
 
     public scanning$ = this._scanning.asObservable();
 
+    private _scanReset = new BehaviorSubject<boolean>(false);
+    private scanReset = this._scanReset.asObservable().pipe(filter(Boolean));
+
     private _onScanEnd = new BehaviorSubject<boolean>(false);
 
     public onScanEnd = this._onScanEnd.asObservable().pipe(
@@ -79,6 +90,7 @@ export class Finder {
     };
 
     start = (location: string | string[] = '/') => {
+        this._scanReset.next(false);
         const directories = Array.isArray(location) ? location : [location];
 
         directories.forEach(directory => {
@@ -92,8 +104,9 @@ export class Finder {
     };
 
     resume = () => {
+        this._scanReset.next(false);
         this._walkers.forEach(walker => walker.resume());
-        logger.info(chalk.black.bgYellow.bold(`paused scanning folders`));
+        logger.info(chalk.black.bgYellow.bold(`resume scanning folders`));
     };
 
     pause = () => {
@@ -102,6 +115,7 @@ export class Finder {
     };
 
     reset = () => {
+        this._scanReset.next(true);
         this._projects.next([]);
     };
 
@@ -145,7 +159,6 @@ export class Finder {
     private handleScanEnd = () => this._onScanEnd.next(true);
 
     private _handleOnScan = (entry: any) => {
-        this._scanning.next(entry.fullPath);
         const stats$ = (entry: any) =>
             from(
                 Promise.all([
@@ -178,6 +191,7 @@ export class Finder {
             .pipe(
                 filter(results => R.take(2, results).every(Boolean)),
                 switchMap(results => stats$(R.last(results))),
+                takeUntil(this.scanReset),
                 filter(project => project.name),
                 tap(({ name }) =>
                     logger.info(
