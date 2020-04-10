@@ -12,6 +12,7 @@ import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
 import { noop } from '../utils/helpers';
 import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
+import { ContextMenu } from '../common/ContextMenu';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
