@@ -15,7 +15,13 @@ import {
     useTable
 } from 'react-table';
 import { ProjectData } from '../../types';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
 import { DefaultColumnFilter } from './columns';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -43,6 +49,8 @@ import Container from '@material-ui/core/Container';
 import { shell } from 'electron';
 import { isDarwin } from '../../constants';
 import Grid from '@material-ui/core/Grid';
+import DeleteProjectsDialog from './DeleteProjectsDialog';
+import { ContextMenu } from '../../common/ContextMenu';
 
 // const animation = (reverseIt = false) => ({
 //     opacity: reverseIt ? reverse([0.5, 1, 1, 0.5, 0.5]) : [0.5, 1, 1, 0.5, 0.5]
@@ -103,8 +111,20 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const classes = useStyles();
-    const { projects = [], deletedProjects } = useContext(ProjectDataContext);
+    const { projects = [], deletedProjects, deleteProjects } = useContext(
+        ProjectDataContext
+    );
     const [showSnackbar, setShowSnackbar] = useState(false);
+    const [contextMenuState, setContextMenuState] = useState<{
+        project: ProjectData | null;
+        mouseX: null | number;
+        mouseY: null | number;
+    }>({
+        project: null,
+        mouseX: null,
+        mouseY: null
+    });
+    const [deletedProject, setDeletedProject] = useState<ProjectData | null>();
     const filterTypes = React.useMemo(
         () => ({
             // Add a new fuzzyTextFilterFn filter type.
@@ -272,6 +292,34 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         setShowSnackbar(true);
     }, [deletedProjects]);
 
+    function handleDeleteProject() {
+        const { project } = contextMenuState;
+        if (project === null) {
+            return;
+        }
+        setDeletedProject(project);
+    }
+    function handleOpenPath() {
+        const { project } = contextMenuState;
+        if (!project?.path) {
+            return;
+        }
+        shell.openItem(project?.path);
+    }
+
+    const contextMenuItems = useMemo(() => {
+        return [
+            {
+                text: 'Delete',
+                action: handleDeleteProject
+            },
+            {
+                text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
+                action: handleOpenPath
+            }
+        ];
+    }, [contextMenuState]);
+
     // Render the UI for your table
     return (
         <>
@@ -355,12 +403,31 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                 </TableHead>
                 <TableBody>
                     <Rows
+                        handleContextMenuOpen={setContextMenuState}
                         rows={rows}
                         toggleRowSelected={toggleRowSelected}
                         prepareRow={prepareRow}
                     />
                 </TableBody>
             </MaUTable>
+            <ContextMenu
+                items={contextMenuItems}
+                mouseX={contextMenuState.mouseX}
+                mouseY={contextMenuState.mouseY}
+                project={contextMenuState.project}
+            />
+            {/*// TODO:: add context menu here*/}
+            <DeleteProjectsDialog
+                handleModalClosed={() => {
+                    setDeletedProject(null);
+                }}
+                visible={!!deletedProject}
+                projects={deletedProject ? [deletedProject] : []}
+                handleAgree={() => {
+                    setDeletedProject(null);
+                    deleteProjects([deletedProject!]);
+                }}
+            />
         </>
     );
 }

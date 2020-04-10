@@ -63,8 +63,11 @@ export class Finder {
 
     private _onScanEnd = new BehaviorSubject<boolean>(false);
 
+    public folderScanned = 0;
+
     public onScanEnd = this._onScanEnd.asObservable().pipe(
         filter(Boolean),
+        tap(e => console.log(this.folderScanned)),
         tap(_ => this.logExecutionTime()),
         delay(2500)
     );
@@ -164,6 +167,7 @@ export class Finder {
     private handleScanEnd = () => this._onScanEnd.next(true);
 
     private _handleOnScan = (entry: any) => {
+        this.folderScanned +=1;
         const stats$ = (entry: any) =>
             from(
                 Promise.all([
