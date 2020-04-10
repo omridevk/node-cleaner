@@ -1,5 +1,5 @@
 import React from 'react';
-import projectColumns from './columns';
+import { defaultColumns } from './columns';
 import { ProjectData } from '../../types';
 import { Table } from './Table';
 
@@ -11,7 +11,7 @@ const Projects: React.FC<{
             <Table
                 onDeleteSelected={onDeleteProjects}
                 onDeleteRow={project => onDeleteProjects([project])}
-                columns={projectColumns()}
+                columns={defaultColumns()}
             />
         </>
     );

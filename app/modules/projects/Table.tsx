@@ -16,18 +16,12 @@ import {
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, {
-    useCallback,
     useContext,
     useEffect,
     useMemo,
     useState
 } from 'react';
-import { DefaultColumnFilter } from './columns';
-import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
-import Tooltip from '@material-ui/core/Tooltip';
-import IconButton from '@material-ui/core/IconButton';
-import FolderOpenIcon from '@material-ui/icons/FolderOpen';
-import DeleteIcon from '@material-ui/icons/Delete';
+import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -37,31 +31,9 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import TableBody from '@material-ui/core/TableBody';
 import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
-import { useProjectsDeleted } from '../../hooks/useProjectsDeleted';
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
-import Typography from '@material-ui/core/Typography';
-import { formatByBytes } from '../../utils/helpers';
-import sum from 'ramda/src/sum';
-import map from 'ramda/src/map';
-import prop from 'ramda/src/prop';
-import Container from '@material-ui/core/Container';
-import { shell } from 'electron';
-import { isDarwin } from '../../constants';
-import Grid from '@material-ui/core/Grid';
-import DeleteProjectsDialog from './DeleteProjectsDialog';
-import { ContextMenu } from '../../common/ContextMenu';
+import { ContextMenuState } from '../../types/ContextMenuState';
+import { Popups } from './Popups';
 
-// const animation = (reverseIt = false) => ({
-//     opacity: reverseIt ? reverse([0.5, 1, 1, 0.5, 0.5]) : [0.5, 1, 1, 0.5, 0.5]
-// });
-// const transition = {
-//     duration: 2,
-//     ease: 'easeInOut',
-//     times: [0, 0.2, 0.5, 0.8, 1],
-//     loop: Infinity,
-//     repeatDelay: 1
-// };
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -111,20 +83,12 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const classes = useStyles();
-    const { projects = [], deletedProjects, deleteProjects } = useContext(
-        ProjectDataContext
-    );
-    const [showSnackbar, setShowSnackbar] = useState(false);
-    const [contextMenuState, setContextMenuState] = useState<{
-        project: ProjectData | null;
-        mouseX: null | number;
-        mouseY: null | number;
-    }>({
+    const { projects = [], deletedProjects } = useContext(ProjectDataContext);
+    const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
         project: null,
         mouseX: null,
         mouseY: null
     });
-    const [deletedProject, setDeletedProject] = useState<ProjectData | null>();
     const filterTypes = React.useMemo(
         () => ({
             // Add a new fuzzyTextFilterFn filter type.
@@ -200,88 +164,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         useSortBy,
         useResizeColumns,
         useRowSelect,
-        hooks => {
-            hooks.visibleColumns.push(columns => [
-                // Let's make a column for selection
-                {
-                    id: 'selection',
-                    minWidth: '300px',
-                    disableResizing: true,
-                    // The header can use the table's getToggleAllRowsSelectedProps method
-                    // to render a checkbox
-                    Header: ({ getToggleAllRowsSelectedProps }) => (
-                        <IndeterminateCheckbox
-                            {...getToggleAllRowsSelectedProps()}
-                        />
-                    ),
-                    // The cell can use the individual row's getToggleRowSelectedProps method
-                    // to the render a checkbox
-                    Cell: ({ row }: { row: Row<ProjectData> }) => (
-                        <div>
-                            <IndeterminateCheckbox
-                                {...row.getToggleRowSelectedProps()}
-                            />
-                        </div>
-                    )
-                },
-                ...columns,
-                {
-                    id: 'actions',
-                    disableResizing: true,
-                    Header: () => 'Actions',
-                    Cell: ({ row }) => (
-                        <Container>
-                            <Grid
-                                container
-                                wrap={'nowrap'}
-                                direction="row"
-                                justify="flex-end"
-                            >
-                                <Tooltip title="Delete" placement="top">
-                                    <span>
-                                        <IconButton
-                                            aria-label="delete"
-                                            onClick={event => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                onDeleteRow(row.original);
-                                            }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
-                                <Tooltip
-                                    title={`Open in ${
-                                        isDarwin ? 'finder' : 'file explorer'
-                                    }`}
-                                    placement="top"
-                                >
-                                    <span>
-                                        <IconButton
-                                            aria-label={``}
-                                            onClick={event => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                shell.openItem(
-                                                    row.original.path
-                                                );
-                                            }}
-                                        >
-                                            <FolderOpenIcon />
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
-                            </Grid>
-                        </Container>
-                    )
-                }
-            ]);
-        }
-    );
-    const deletedTotalSize = useMemo(
-        () => formatByBytes(sum(map(prop('size'), deletedProjects))),
-        [deletedProjects]
+        hooks => extraColumns({ hooks, onDeleteRow })
     );
     // when we delete stuff, we want to reset all selected state.
     useEffect(() => {
@@ -289,64 +172,11 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         if (!deletedProjects.length) {
             return;
         }
-        setShowSnackbar(true);
     }, [deletedProjects]);
-
-    function handleDeleteProject() {
-        const { project } = contextMenuState;
-        if (project === null) {
-            return;
-        }
-        setDeletedProject(project);
-    }
-    function handleOpenPath() {
-        const { project } = contextMenuState;
-        if (!project?.path) {
-            return;
-        }
-        shell.openItem(project?.path);
-    }
-
-    const contextMenuItems = useMemo(() => {
-        return [
-            {
-                text: 'Delete',
-                action: handleDeleteProject
-            },
-            {
-                text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
-                action: handleOpenPath
-            }
-        ];
-    }, [contextMenuState]);
 
     // Render the UI for your table
     return (
         <>
-            <Snackbar
-                onClose={() => setShowSnackbar(false)}
-                open={showSnackbar}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                autoHideDuration={4000}
-            >
-                <MuiAlert elevation={6} variant="filled" severity={'success'}>
-                    Successfully deleted
-                    {deletedProjects.length > 1 ? ' projects: ' : ' project: '}
-                    <br />
-                    <Typography
-                        style={{ maxWidth: '200px' }}
-                        noWrap
-                        variant="subtitle2"
-                    >
-                        {deletedProjects
-                            .map(project => project.name)
-                            .join(', ')}
-                    </Typography>
-                    <Typography variant={'subtitle2'}>
-                        Total spaced freed: {deletedTotalSize}
-                    </Typography>
-                </MuiAlert>
-            </Snackbar>
             <Toolbar
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}
@@ -410,23 +240,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <ContextMenu
-                items={contextMenuItems}
-                mouseX={contextMenuState.mouseX}
-                mouseY={contextMenuState.mouseY}
-                project={contextMenuState.project}
-            />
-            {/*// TODO:: add context menu here*/}
-            <DeleteProjectsDialog
-                handleModalClosed={() => {
-                    setDeletedProject(null);
-                }}
-                visible={!!deletedProject}
-                projects={deletedProject ? [deletedProject] : []}
-                handleAgree={() => {
-                    setDeletedProject(null);
-                    deleteProjects([deletedProject!]);
-                }}
+            <Popups
+                deletedProjects={deletedProjects}
+                contextMenuState={contextMenuState}
             />
         </>
     );

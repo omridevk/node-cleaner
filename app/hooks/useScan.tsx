@@ -1,22 +1,22 @@
 import { Finder } from '../utils/finder';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ProjectData } from '../types';
-import { tap, first, catchError } from 'rxjs/operators';
+import { tap, first } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
 import compose from 'ramda/src/compose';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
 import { formatByBytes } from '../utils/helpers';
-import { exec } from '../utils/exec';
 import rimraf from 'rimraf';
-// import * as electronLog from 'electron-log';
+import * as electronLog from 'electron-log';
 import path from 'path';
 import * as R from 'ramda';
-import { bindCallback, EMPTY, forkJoin } from 'rxjs';
+import { bindCallback, forkJoin } from 'rxjs';
+import chalk from 'chalk';
 
 const rimraf$ = bindCallback(rimraf);
-// const logger = electronLog.create('use-scan');
+const logger = electronLog.create('use-scan');
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
@@ -121,6 +121,14 @@ export const useScan = () => {
         dispatch({ type: Actions.DeleteProjects });
         const paths = deletedProjects.map(
             project => `${path.join(project.path, 'node_modules')}`
+        );
+
+        logger.info(
+            chalk.yellowBright(
+                `removing projects ${chalk.redBright(
+                    deletedProjects.map(project => project.name).join(' , ')
+                )}`
+            )
         );
         forkJoin(paths.map(path => rimraf$(path)))
             .pipe(first())
