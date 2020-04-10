@@ -7,6 +7,14 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { SliderColumnFilter } from './SliderFilter';
 import { createStyles } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
+import Container from '@material-ui/core/Container';
+import Grid from '@material-ui/core/Grid';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { isDarwin } from '../../constants';
+import { shell } from "electron";
+import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -41,7 +49,7 @@ export const DefaultColumnFilter = () => {
     return null;
 };
 
-export default () =>
+export const defaultColumns = () =>
     useMemo(
         () => [
             {
@@ -111,3 +119,84 @@ export default () =>
         ],
         []
     );
+
+export const extraColumns = ({onDeleteRow, hooks}) => {
+    {
+        hooks.visibleColumns.push(columns => [
+            // Let's make a column for selection
+            {
+                id: 'selection',
+                minWidth: '300px',
+                disableResizing: true,
+                // The header can use the table's getToggleAllRowsSelectedProps method
+                // to render a checkbox
+                Header: ({ getToggleAllRowsSelectedProps }) => (
+                    <IndeterminateCheckbox
+                        {...getToggleAllRowsSelectedProps()}
+                    />
+                ),
+                // The cell can use the individual row's getToggleRowSelectedProps method
+                // to the render a checkbox
+                Cell: ({ row }: { row: Row<ProjectData> }) => (
+                    <div>
+                        <IndeterminateCheckbox
+                            {...row.getToggleRowSelectedProps()}
+                        />
+                    </div>
+                )
+            },
+            ...columns,
+            {
+                id: 'actions',
+                disableResizing: true,
+                Header: () => 'Actions',
+                Cell: ({ row }) => (
+                    <Container>
+                        <Grid
+                            container
+                            wrap={'nowrap'}
+                            direction="row"
+                            justify="flex-end"
+                        >
+                            <Tooltip title="Delete" placement="top">
+                                    <span>
+                                        <IconButton
+                                            aria-label="delete"
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                onDeleteRow(row.original);
+                                            }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </span>
+                            </Tooltip>
+                            <Tooltip
+                                title={`Open in ${
+                                    isDarwin ? 'finder' : 'file explorer'
+                                }`}
+                                placement="top"
+                            >
+                                    <span>
+                                        <IconButton
+                                            aria-label={``}
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                shell.openItem(
+                                                    row.original.path
+                                                );
+                                            }}
+                                        >
+                                            <FolderOpenIcon />
+                                        </IconButton>
+                                    </span>
+                            </Tooltip>
+                        </Grid>
+                    </Container>
+                )
+            }
+        ]);
+    }
+}

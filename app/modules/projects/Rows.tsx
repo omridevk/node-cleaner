@@ -30,16 +30,8 @@ interface RowsProps {
 }
 
 // @ts-ignore
-export const Rows = React.forwardRef(
-    (
-        {
-            rows,
-            prepareRow,
-            toggleRowSelected,
-            handleContextMenuOpen
-        }: RowsProps,
-        _
-    ) => {
+export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef(
+    ({ rows, prepareRow, toggleRowSelected, handleContextMenuOpen }, _) => {
         {
             const handleClick = (
                 event: React.MouseEvent<any>,
