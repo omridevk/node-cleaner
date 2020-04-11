@@ -12,6 +12,7 @@ interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
     submenu?: DarwinMenuItemConstructorOptions[] | Menu;
 }
 
+
 export default class MenuBuilder {
     mainWindow: BrowserWindow;
 
@@ -55,17 +56,15 @@ export default class MenuBuilder {
 
     buildDarwinTemplate() {
         const subMenuAbout: DarwinMenuItemConstructorOptions = {
-            label: 'Electron',
+            label: app.name,
             submenu: [
                 {
-                    label: 'About ElectronReact',
+                    label: `About ${app.name}`,
                     selector: 'orderFrontStandardAboutPanel:'
                 },
                 { type: 'separator' },
-                { label: 'Services', submenu: [] },
-                { type: 'separator' },
                 {
-                    label: 'Hide ElectronReact',
+                    label: 'Hide',
                     accelerator: 'Command+H',
                     selector: 'hide:'
                 },
@@ -74,7 +73,6 @@ export default class MenuBuilder {
                     accelerator: 'Command+Shift+H',
                     selector: 'hideOtherApplications:'
                 },
-                { label: 'Show All', selector: 'unhideAllApplications:' },
                 { type: 'separator' },
                 {
                     label: 'Quit',
@@ -88,13 +86,6 @@ export default class MenuBuilder {
         const subMenuEdit: DarwinMenuItemConstructorOptions = {
             label: 'Edit',
             submenu: [
-                { label: 'Undo', accelerator: 'Command+Z', selector: 'undo:' },
-                {
-                    label: 'Redo',
-                    accelerator: 'Shift+Command+Z',
-                    selector: 'redo:'
-                },
-                { type: 'separator' },
                 { label: 'Cut', accelerator: 'Command+X', selector: 'cut:' },
                 { label: 'Copy', accelerator: 'Command+C', selector: 'copy:' },
                 {
@@ -174,22 +165,14 @@ export default class MenuBuilder {
                 {
                     label: 'Learn More',
                     click() {
-                        shell.openExternal('https://electronjs.org');
+                        shell.openExternal('https://github.com/omridevk/node-cleaner');
                     }
                 },
                 {
                     label: 'Documentation',
                     click() {
                         shell.openExternal(
-                            'https://github.com/electron/electron/tree/master/docs#readme'
-                        );
-                    }
-                },
-                {
-                    label: 'Community Discussions',
-                    click() {
-                        shell.openExternal(
-                            'https://www.electronjs.org/community'
+                            'https://github.com/omridevk/node-cleaner'
                         );
                     }
                 },
@@ -197,7 +180,7 @@ export default class MenuBuilder {
                     label: 'Search Issues',
                     click() {
                         shell.openExternal(
-                            'https://github.com/electron/electron/issues'
+                            'https://github.com/omridevk/node-cleaner/issues'
                         );
                     }
                 }
@@ -285,22 +268,14 @@ export default class MenuBuilder {
                     {
                         label: 'Learn More',
                         click() {
-                            shell.openExternal('https://electronjs.org');
+                            shell.openExternal('https://github.com/omridevk/node-cleaner');
                         }
                     },
                     {
                         label: 'Documentation',
                         click() {
                             shell.openExternal(
-                                'https://github.com/electron/electron/tree/master/docs#readme'
-                            );
-                        }
-                    },
-                    {
-                        label: 'Community Discussions',
-                        click() {
-                            shell.openExternal(
-                                'https://www.electronjs.org/community'
+                                'https://github.com/omridevk/node-cleaner'
                             );
                         }
                     },
@@ -308,7 +283,7 @@ export default class MenuBuilder {
                         label: 'Search Issues',
                         click() {
                             shell.openExternal(
-                                'https://github.com/electron/electron/issues'
+                                'https://github.com/omridevk/node-cleaner/issues'
                             );
                         }
                     }
