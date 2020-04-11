@@ -36,7 +36,6 @@ const Projects: React.FC<{
         onDeleteProjects(projects);
     }
     const toggleScan = useCallback(() => {
-        console.log(loading);
         if (loading) {
             pauseScan();
             return;

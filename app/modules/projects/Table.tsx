@@ -15,12 +15,7 @@ import {
     useTable
 } from 'react-table';
 import { ProjectData } from '../../types';
-import React, {
-    useContext,
-    useEffect,
-    useMemo,
-    useState
-} from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
@@ -240,10 +235,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <Popups
-                deletedProjects={deletedProjects}
-                contextMenuState={contextMenuState}
-            />
+            <Popups contextMenuState={contextMenuState} />
         </>
     );
 }

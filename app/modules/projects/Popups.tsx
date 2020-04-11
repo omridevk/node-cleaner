@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { ContextMenu } from '../../common/ContextMenu';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
 import { ContextMenuState } from '../../types/ContextMenuState';
@@ -16,14 +16,16 @@ import prop from 'ramda/src/prop';
 
 interface Props {
     contextMenuState: ContextMenuState;
-    deletedProjects?: ProjectData[];
 }
 
-export const Popups: React.FC<Props> = ({
-    contextMenuState,
-    deletedProjects = []
-}) => {
-    const { deleteProjects } = useContext(ProjectDataContext);
+export const Popups: React.FC<Props> = ({ contextMenuState }) => {
+    const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
+    useEffect(() => {
+        if (!deletedProjects.length) {
+            return;
+        }
+        setShowSnackbar(true);
+    }, [deletedProjects]);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const deletedTotalSize = useMemo(
         () => formatByBytes(sum(map(prop('size'), deletedProjects))),
