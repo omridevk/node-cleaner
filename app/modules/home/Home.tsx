@@ -8,7 +8,7 @@ import { Scan, ScanSelection, ScanType } from './ScanSelection';
 import { FolderInput } from './FolderInput';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
-import { isDarwin } from '../../constants';
+import { isDarwin, isWin } from '../../constants';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -114,7 +114,11 @@ export default function Home({ drives }: Props) {
                     />
                     {scan.type === ScanType.Folder && (
                         <FolderInput
-                            directories={directories}
+                            directories={
+                                isWin && directories.length === drives.length
+                                    ? []
+                                    : directories
+                            }
                             onChange={handleFolderChanged}
                         />
                     )}
