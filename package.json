@@ -255,7 +255,7 @@
         "testcafe-react-selectors": "^4.0.0",
         "typed-css-modules-webpack-plugin": "^0.1.2",
         "typescript": "^3.7.5",
-        "url-loader": "^3.0.0",
+        "url-loader": "^4.1.0",
         "webpack": "^4.41.5",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.3.10",
