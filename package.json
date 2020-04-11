@@ -176,7 +176,7 @@
         "@types/history": "^4.7.5",
         "@types/jest": "^24.9.1",
         "@types/match-sorter": "^4.0.0",
-        "@types/node": "^12",
+        "@types/node": "^13",
         "@types/ramda": "^0.27.3",
         "@types/react": "^16.9.17",
         "@types/react-dom": "^16.9.6",
