@@ -10,17 +10,21 @@ import {
     map,
     switchMap,
     take,
+    takeUntil,
+    takeWhile,
     tap,
-    takeUntil
+    throttleTime
 } from 'rxjs/operators';
 import * as R from 'ramda';
+import { without } from 'ramda';
 import { ProjectData } from '../types';
 import { checkUnix, checkWin32 } from './check-size';
 import * as electronLog from 'electron-log';
 import moment from 'moment';
 import { Drive, listDrives } from './list-drives';
-import { without } from 'ramda';
 import { ignoredFolders } from '../constants/ignoredFolders';
+import { ScanState } from '../hooks/useScan';
+
 const logger = electronLog.create('finder');
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
 
@@ -54,21 +58,21 @@ export class Finder {
 
     public projects$ = this._projects.asObservable();
 
-    private _scanning = new BehaviorSubject<string>('');
+    private _foldersScanned = new BehaviorSubject<number>(0);
 
-    public scanning$ = this._scanning.asObservable();
+    public foldersScanned$ = this._foldersScanned
+        .asObservable()
+        .pipe(throttleTime(300));
 
     private _scanReset = new BehaviorSubject<boolean>(false);
     private scanReset = this._scanReset.asObservable().pipe(filter(Boolean));
 
     private _onScanEnd = new BehaviorSubject<boolean>(false);
 
-    public folderScanned = 0;
-
     public onScanEnd = this._onScanEnd.asObservable().pipe(
         filter(Boolean),
-        tap(e => console.log(this.folderScanned)),
-        tap(_ => this.logExecutionTime()),
+        tap(() => logger.info(this._foldersScanned.getValue())),
+        tap(() => this.logExecutionTime()),
         delay(2500)
     );
 
@@ -79,6 +83,8 @@ export class Finder {
     }
 
     constructor() {}
+
+    _state = ScanState.Idle;
 
     scanDrives(): Observable<Drive[]> {
         return listDrives();
@@ -98,6 +104,7 @@ export class Finder {
 
     start = (location: string | string[] = '/') => {
         this._scanReset.next(false);
+        this._foldersScanned.next(0);
         const directories = Array.isArray(location) ? location : [location];
 
         directories.forEach(directory => {
@@ -107,23 +114,27 @@ export class Finder {
         });
         this._projects.next([]);
         this._startTime = performance.now();
+        this._state = ScanState.Loading;
         this._addListeners();
     };
 
     resume = () => {
         this._scanReset.next(false);
         this._walkers.forEach(walker => walker.resume());
+        this._state = ScanState.Loading;
         logger.info(chalk.black.bgYellow.bold(`resume scanning folders`));
     };
 
     pause = () => {
         this._walkers.forEach(walker => walker.pause());
+        this._state = ScanState.Idle;
         logger.info(chalk.black.bgYellow.bold(`paused scanning folders`));
     };
 
     reset = () => {
         this._scanReset.next(true);
         this._projects.next([]);
+        this._state = ScanState.Idle;
     };
 
     cancel = () => {
@@ -147,6 +158,7 @@ export class Finder {
         if (this._walkers.length) {
             return;
         }
+        this._state = ScanState.Finished;
         this._onScanEnd.next(true);
     };
 
@@ -167,7 +179,7 @@ export class Finder {
     private handleScanEnd = () => this._onScanEnd.next(true);
 
     private _handleOnScan = (entry: any) => {
-        this.folderScanned +=1;
+        this._foldersScanned.next(this._foldersScanned.getValue() + 1);
         const stats$ = (entry: any) =>
             from(
                 Promise.all([
@@ -181,6 +193,7 @@ export class Finder {
                     checkSize(`${path.join(entry.fullPath, 'node_modules')}`)
                 ])
             ).pipe(
+                takeWhile(() => this._state === ScanState.Loading),
                 map(([{ name, description }, { mtime }, { size }]) => ({
                     size,
                     name,

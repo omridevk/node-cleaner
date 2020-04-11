@@ -13,7 +13,7 @@ import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { isDarwin } from '../../constants';
-import { shell } from "electron";
+import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 
 // Define a custom filter filter function!
@@ -55,7 +55,22 @@ export const defaultColumns = () =>
             {
                 Header: 'Name',
                 accessor: 'name',
-                defaultCanFilter: false
+                defaultCanFilter: true,
+                Cell: ({ row }: { row: Row<ProjectData> }) => {
+                    const {
+                        original: { name }
+                    } = row;
+                    const classes = useStyles();
+                    return (
+                        <Tooltip
+                            title={name || ''}
+                            aria-label={name || ''}
+                            placement="top"
+                        >
+                            <div className={classes.cellText}>{name}</div>
+                        </Tooltip>
+                    );
+                }
             },
             {
                 Header: 'Size',
@@ -82,16 +97,18 @@ export const defaultColumns = () =>
                 Header: 'Description',
                 accessor: 'description',
                 Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const { original } = row;
+                    const {
+                        original: { description }
+                    } = row;
                     const classes = useStyles();
                     return (
                         <Tooltip
-                            title={original.description || ''}
-                            aria-label={original.description || ''}
+                            title={description || ''}
+                            aria-label={description || ''}
                             placement="top"
                         >
                             <div className={classes.cellText}>
-                                {original.description}
+                                {description}
                             </div>
                         </Tooltip>
                     );
@@ -101,17 +118,13 @@ export const defaultColumns = () =>
                 Header: 'Full Path',
                 accessor: 'path',
                 Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const { original } = row;
+                    const {
+                        original: { path }
+                    } = row;
                     const classes = useStyles();
                     return (
-                        <Tooltip
-                            title={original.path}
-                            aria-label={original.path}
-                            placement="top"
-                        >
-                            <div className={classes.cellText}>
-                                {original.path}
-                            </div>
+                        <Tooltip title={path} aria-label={path} placement="top">
+                            <div className={classes.cellText}>{path}</div>
                         </Tooltip>
                     );
                 }
@@ -120,7 +133,7 @@ export const defaultColumns = () =>
         []
     );
 
-export const extraColumns = ({onDeleteRow, hooks}) => {
+export const extraColumns = ({ onDeleteRow, hooks }) => {
     {
         hooks.visibleColumns.push(columns => [
             // Let's make a column for selection
@@ -159,18 +172,18 @@ export const extraColumns = ({onDeleteRow, hooks}) => {
                             justify="flex-end"
                         >
                             <Tooltip title="Delete" placement="top">
-                                    <span>
-                                        <IconButton
-                                            aria-label="delete"
-                                            onClick={event => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                onDeleteRow(row.original);
-                                            }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </span>
+                                <span>
+                                    <IconButton
+                                        aria-label="delete"
+                                        onClick={event => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            onDeleteRow(row.original);
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </span>
                             </Tooltip>
                             <Tooltip
                                 title={`Open in ${
@@ -178,20 +191,18 @@ export const extraColumns = ({onDeleteRow, hooks}) => {
                                 }`}
                                 placement="top"
                             >
-                                    <span>
-                                        <IconButton
-                                            aria-label={``}
-                                            onClick={event => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                shell.openItem(
-                                                    row.original.path
-                                                );
-                                            }}
-                                        >
-                                            <FolderOpenIcon />
-                                        </IconButton>
-                                    </span>
+                                <span>
+                                    <IconButton
+                                        aria-label={``}
+                                        onClick={event => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            shell.openItem(row.original.path);
+                                        }}
+                                    >
+                                        <FolderOpenIcon />
+                                    </IconButton>
+                                </span>
                             </Tooltip>
                         </Grid>
                     </Container>
@@ -199,4 +210,4 @@ export const extraColumns = ({onDeleteRow, hooks}) => {
             }
         ]);
     }
-}
+};

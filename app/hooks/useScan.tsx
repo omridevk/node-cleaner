@@ -1,21 +1,20 @@
 import { Finder } from '../utils/finder';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ProjectData } from '../types';
-import { tap, first } from 'rxjs/operators';
+import { tap, first, catchError } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
 import compose from 'ramda/src/compose';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
 import { formatByBytes } from '../utils/helpers';
-import rimraf from 'rimraf';
 import * as electronLog from 'electron-log';
 import path from 'path';
 import * as R from 'ramda';
-import { bindCallback, forkJoin } from 'rxjs';
+import { EMPTY, forkJoin, from } from 'rxjs';
 import chalk from 'chalk';
+import fs from 'fs-extra';
 
-const rimraf$ = bindCallback(rimraf);
 const logger = electronLog.create('use-scan');
 export enum ScanState {
     Loading = 'loading',
@@ -36,12 +35,18 @@ enum Actions {
     StartScan,
     PauseScan,
     FinishedScan,
+    Reset,
     DeleteProjects,
     FinishedDelete
 }
 
 function reducer(state: State, action: any): State {
     switch (action.type) {
+        case Actions.Reset:
+            return {
+                scanning: ScanState.Idle,
+                deleting: DeleteState.Idle
+            };
         case Actions.StartScan:
             return {
                 ...state,
@@ -72,37 +77,14 @@ function reducer(state: State, action: any): State {
     }
 }
 
-// const delete = ({projects, paths}) => exec(`rm -rf ${paths}`, {
-//     name: 'Node Cleaner'
-// }).pipe(
-//     tap(() =>
-//         logger.info(
-//             chalk.yellowBright(
-//                 `removing projects ${chalk.redBright(
-//                     projects
-//                         .map(project => project.name)
-//                         .join(' , ')
-//                 )}`
-//             )
-//         )
-//     ),
-//     catchError(error => {
-//         console.error(
-//             `error removing projects`,
-//             chalk.redBright(error.message)
-//         );
-//         return EMPTY;
-//     }),
-//     rxMap(() => ({ projects, paths })),
-//     retry()
-// )
-
 export const useScan = () => {
     const finder = useRef<Finder>();
     if (!finder.current) {
         finder.current = new Finder();
     }
     const [projects, setProjects] = useState<ProjectData[]>([]);
+    const [foldersScanned, setFoldersScanned] = useState(0);
+    const folders = useRef<string | string[]>();
     const [deletedProjects, setDeletedProjects] = useState<ProjectData[]>([]);
     const [drives, setDrives] = useState<Drive[]>([]);
     const [state, dispatch] = useReducer(reducer, {
@@ -115,6 +97,7 @@ export const useScan = () => {
     ]);
     function startScan(dir: string | string[]) {
         finder.current!.start(dir);
+        folders.current = dir;
         dispatch({ type: Actions.StartScan });
     }
     function deleteProjects(deletedProjects: ProjectData[]) {
@@ -130,48 +113,77 @@ export const useScan = () => {
                 )}`
             )
         );
-        forkJoin(paths.map(path => rimraf$(path)))
+        forkJoin(
+            paths.map(path =>
+                from(fs.remove(path)).pipe(
+                    catchError(e => {
+                        logger.error(e);
+                        return EMPTY;
+                    })
+                )
+            )
+        )
+            // exec(`rm -rf ${paths}`)
             .pipe(first())
-            .subscribe(() => {
-                setDeletedProjects(deletedProjects);
-                const comp = (x: ProjectData, y: ProjectData) =>
-                    x.path === y.path;
-                finder.current!.updateProjects(
-                    R.differenceWith(comp, projects, deletedProjects)
-                );
-                dispatch({ type: Actions.FinishedDelete });
-            });
+            .subscribe(
+                () => {
+                    setDeletedProjects(deletedProjects);
+                    const comp = (x: ProjectData, y: ProjectData) =>
+                        x.path === y.path;
+                    finder.current?.updateProjects(
+                        R.differenceWith(comp, projects, deletedProjects)
+                    );
+                    dispatch({ type: Actions.FinishedDelete });
+                },
+                e => console.log(e)
+            );
     }
     function resetProjects() {
         setProjects([]);
         setDeletedProjects([]);
     }
+    function resetScan() {
+        finder.current?.destroy();
+        resetProjects();
+        dispatch({ type: Actions.Reset });
+        if (!folders.current) {
+            return;
+        }
+        startScan(folders.current);
+    }
     function pauseScan() {
-        finder.current!.pause();
         dispatch({ type: Actions.PauseScan });
+        finder.current?.pause();
     }
     function stopScan() {
         dispatch({ type: Actions.FinishedScan });
-        finder.current!.cancel();
+        finder.current?.cancel();
     }
     function resumeScan() {
         dispatch({ type: Actions.StartScan });
-        finder.current!.resume();
+        finder.current?.resume();
     }
     useEffect(() => {
         const scanEndSub = finder.current!.onScanEnd.subscribe(() =>
             dispatch({ type: Actions.FinishedScan })
         );
-        const scanDriveSub = finder
-            .current!.scanDrives()
+        const totalFoldersScannedSub = finder.current?.foldersScanned$.subscribe(
+            number => setFoldersScanned(number)
+        );
+        const scanDriveSub = finder.current
+            ?.scanDrives()
             .subscribe(drives => setDrives(drives));
-        const sub = finder
-            .current!.projects$.pipe(tap(projects => setProjects(projects)))
+        const getProjectsSub = finder.current?.projects$
+            .pipe(tap(projects => setProjects(projects)))
             .subscribe();
+        const subscriptions = [
+            getProjectsSub,
+            scanDriveSub,
+            scanEndSub,
+            totalFoldersScannedSub
+        ];
         return () => {
-            sub.unsubscribe();
-            scanEndSub.unsubscribe();
-            scanDriveSub.unsubscribe();
+            subscriptions.forEach(sub => sub?.unsubscribe());
             finder.current!.destroy();
         };
     }, []);
@@ -183,8 +195,10 @@ export const useScan = () => {
         deleteProjects,
         deletedProjects,
         totalSizeString,
+        foldersScanned,
         pauseScan,
         resumeScan,
+        resetScan,
         stopScan,
         state,
         drives

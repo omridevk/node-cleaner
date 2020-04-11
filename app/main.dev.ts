@@ -13,9 +13,6 @@ import { app, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-import { DataManager } from './utils/data-manager';
-import { Finder } from './utils/finder';
-import { Ipc } from './utils/ipc';
 
 
 const appIcon =
