@@ -10,10 +10,10 @@
  */
 import path from 'path';
 import { app, BrowserWindow } from 'electron';
+import { productName } from '../package.json';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-
 
 const appIcon =
     process.platform === 'darwin'
