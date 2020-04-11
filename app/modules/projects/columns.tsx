@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FilterValue, IdType, Row } from 'react-table';
+import { FilterValue, Hooks, IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
 import moment from 'moment';
@@ -133,13 +133,21 @@ export const defaultColumns = () =>
         []
     );
 
-export const extraColumns = ({ onDeleteRow, hooks }) => {
+export const extraColumns = ({
+    onDeleteRow,
+    hooks
+}: {
+    onDeleteRow: (project: ProjectData) => void;
+    hooks: Hooks<ProjectData>;
+}) => {
     {
         hooks.visibleColumns.push(columns => [
             // Let's make a column for selection
             {
                 id: 'selection',
-                minWidth: '300px',
+                width: 75,
+                maxWidth: 75,
+                minWidth: 30,
                 disableResizing: true,
                 // The header can use the table's getToggleAllRowsSelectedProps method
                 // to render a checkbox

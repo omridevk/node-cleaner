@@ -12,13 +12,13 @@ const useStyles = makeStyles(() =>
         container: {
             position: 'absolute',
             top: 'calc(50% + 10px)',
-            maxWidth: "80%",
-            left: "15%"
+            maxWidth: '80%',
+            left: '15%'
         }
     })
 );
 
-interface Props {
+export interface SliderColumnFilterProps {
     column: {
         filterValue: FilterValue;
         setFilter: (
@@ -50,8 +50,7 @@ function ValueLabelComponent(props: ValueLabelComponentProps) {
 
 export const SliderColumnFilter = ({
     column: { filterValue, setFilter, preFilteredRows, id }
-}: Props) => {
-
+}: SliderColumnFilterProps) => {
     const classes = useStyles();
     // calculate the min max of the slider based on the
     // max values in the table.

@@ -16,10 +16,8 @@ import { createStyles, lighten, Theme } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
-import { MoreMenu } from '../../common/MoreMenu';
-import { useHistory } from 'react-router';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
-import { ScanState } from '../../hooks/useScan';
+
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;

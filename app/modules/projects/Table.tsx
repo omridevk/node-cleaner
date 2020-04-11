@@ -4,6 +4,8 @@ import matchSorter from 'match-sorter';
 import {
     Column,
     FilterValue,
+    HeaderGroup,
+    Hooks,
     IdType,
     Row,
     useFilters,
@@ -28,7 +30,6 @@ import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
 import { ContextMenuState } from '../../types/ContextMenuState';
 import { Popups } from './Popups';
-
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -159,7 +160,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         useSortBy,
         useResizeColumns,
         useRowSelect,
-        hooks => extraColumns({ hooks, onDeleteRow })
+        (hooks: Hooks<ProjectData>) => extraColumns({ hooks, onDeleteRow })
     );
     // when we delete stuff, we want to reset all selected state.
     useEffect(() => {
@@ -182,49 +183,53 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             />
             <MaUTable {...getTableProps()}>
                 <TableHead>
-                    {headerGroups.map(headerGroup => (
-                        <TableRow
-                            {...headerGroup.getHeaderGroupProps()}
-                            classes={{
-                                root: classes.rowRoot
-                            }}
-                        >
-                            {headerGroup.headers.map((column: any) => (
-                                <TableCell
-                                    {...column.getHeaderProps(
-                                        column.getSortByToggleProps()
-                                    )}
-                                    classes={{
-                                        root: classes.cellRoot
-                                    }}
-                                >
-                                    {column.render('Header')}
-                                    <div>
-                                        {column.canFilter
-                                            ? column.render('Filter')
-                                            : null}
-                                    </div>
-                                    {!column.disableResizing && (
-                                        <div
-                                            {...column.getResizerProps()}
-                                            className={classes.resizer}
-                                        />
-                                    )}
-                                    <TableSortLabel
+                    {headerGroups.map(
+                        (headerGroup: HeaderGroup<ProjectData>) => (
+                            <TableRow
+                                {...headerGroup.getHeaderGroupProps()}
+                                classes={{
+                                    root: classes.rowRoot
+                                }}
+                            >
+                                {headerGroup.headers.map((column: any) => (
+                                    <TableCell
+                                        {...column.getHeaderProps(
+                                            column.getSortByToggleProps()
+                                        )}
                                         classes={{
-                                            root: column.canSort
-                                                ? ''
-                                                : classes.tableSortLabelRoot
+                                            root: classes.cellRoot
                                         }}
-                                        active={column.isSorted}
-                                        direction={
-                                            column.isSortedDesc ? 'desc' : 'asc'
-                                        }
-                                    />
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
+                                    >
+                                        {column.render('Header')}
+                                        <div>
+                                            {column.canFilter
+                                                ? column.render('Filter')
+                                                : null}
+                                        </div>
+                                        {!column.disableResizing && (
+                                            <div
+                                                {...column.getResizerProps()}
+                                                className={classes.resizer}
+                                            />
+                                        )}
+                                        <TableSortLabel
+                                            classes={{
+                                                root: column.canSort
+                                                    ? ''
+                                                    : classes.tableSortLabelRoot
+                                            }}
+                                            active={column.isSorted}
+                                            direction={
+                                                column.isSortedDesc
+                                                    ? 'desc'
+                                                    : 'asc'
+                                            }
+                                        />
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        )
+                    )}
                 </TableHead>
                 <TableBody>
                     <Rows
