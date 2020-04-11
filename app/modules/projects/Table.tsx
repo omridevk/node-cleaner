@@ -1,10 +1,7 @@
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import { createStyles } from '@material-ui/core';
 import matchSorter from 'match-sorter';
 import {
     Column,
     FilterValue,
-    HeaderGroup,
     Hooks,
     IdType,
     Row,
@@ -21,48 +18,12 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import TableSortLabel from '@material-ui/core/TableSortLabel';
 import TableBody from '@material-ui/core/TableBody';
 import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
 import { ContextMenuState } from '../../types/ContextMenuState';
 import { Popups } from './Popups';
-
-const useStyles = makeStyles(() =>
-    createStyles({
-        rowRoot: {
-            maxHeight: '80px'
-        },
-        cellRoot: {
-            '&>div': {
-                display: 'inline-block'
-            },
-            borderRight: 'solid 1px rgba(0, 0, 0, 0.12)',
-            lineHeight: '2.5rem'
-        },
-        resizer: {
-            display: 'inline-block',
-            backgroundColor: 'rgba(0, 0, 0, 0.12)',
-            width: '5px',
-            opacity: 0,
-            height: '100%',
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            transform: 'translateX(50%)',
-            zIndex: 10
-        },
-        tableSortLabelRoot: {
-            display: 'none'
-        },
-        resizing: {
-            background: 'red'
-        }
-    })
-);
+import { TableHead } from './TableHead';
 
 function fuzzyTextFilterFn(
     rows: Row<ProjectData>[],
@@ -78,7 +39,6 @@ interface TableProps {
     onDeleteSelected: (projects: ProjectData[]) => void;
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
-    const classes = useStyles();
     const { projects = [], deletedProjects } = useContext(ProjectDataContext);
     const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
         project: null,
@@ -182,55 +142,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                 onDeleteSelected={onDeleteSelected}
             />
             <MaUTable {...getTableProps()}>
-                <TableHead>
-                    {headerGroups.map(
-                        (headerGroup: HeaderGroup<ProjectData>) => (
-                            <TableRow
-                                {...headerGroup.getHeaderGroupProps()}
-                                classes={{
-                                    root: classes.rowRoot
-                                }}
-                            >
-                                {headerGroup.headers.map((column: any) => (
-                                    <TableCell
-                                        {...column.getHeaderProps(
-                                            column.getSortByToggleProps()
-                                        )}
-                                        classes={{
-                                            root: classes.cellRoot
-                                        }}
-                                    >
-                                        {column.render('Header')}
-                                        <div>
-                                            {column.canFilter
-                                                ? column.render('Filter')
-                                                : null}
-                                        </div>
-                                        {!column.disableResizing && (
-                                            <div
-                                                {...column.getResizerProps()}
-                                                className={classes.resizer}
-                                            />
-                                        )}
-                                        <TableSortLabel
-                                            classes={{
-                                                root: column.canSort
-                                                    ? ''
-                                                    : classes.tableSortLabelRoot
-                                            }}
-                                            active={column.isSorted}
-                                            direction={
-                                                column.isSortedDesc
-                                                    ? 'desc'
-                                                    : 'asc'
-                                            }
-                                        />
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        )
-                    )}
-                </TableHead>
+                <TableHead headerGroups={headerGroups} />
                 <TableBody>
                     <Rows
                         handleContextMenuOpen={setContextMenuState}
