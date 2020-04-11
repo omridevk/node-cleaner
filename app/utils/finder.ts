@@ -132,6 +132,7 @@ export class Finder {
     };
 
     reset = () => {
+        this._foldersScanned.next(0);
         this._scanReset.next(true);
         this._projects.next([]);
         this._state = ScanState.Idle;
