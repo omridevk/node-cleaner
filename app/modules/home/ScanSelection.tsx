@@ -54,7 +54,8 @@ export const ScanSelection: React.FC<Props> = ({
     return (
         <div className={classes.container}>
             <Button
-                color={'primary'}
+                variant="contained"
+                color="primary"
                 aria-controls="Scan Type"
                 aria-haspopup="true"
                 onClick={handleClick}

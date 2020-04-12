@@ -14,9 +14,12 @@ const useStyles = makeStyles(() =>
             padding: '50% 0',
             overflow: 'hidden',
             borderRadius: '50%',
-            boxShadow: '0 0 3px gray',
-            background:
-                'linear-gradient(to right, rgb(255, 216, 155), rgb(25, 84, 123))',
+            background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+            color: 'white',
+            boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+            // boxShadow: '0 0 3px gray',
+            // background:
+            //     'linear-gradient(to right, rgb(255, 216, 155), rgb(25, 84, 123))',
             border: 'solid 2px #efefef'
         },
         fabText: {
@@ -31,6 +34,7 @@ const useStyles = makeStyles(() =>
             textDecoration: 'none'
         },
         container: {
+            margin: '15px',
             minWidth: '200px'
         }
     })
