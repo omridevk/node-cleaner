@@ -199,7 +199,6 @@ export class Finder {
                     checkSize(`${path.join(entry.fullPath, 'node_modules')}`)
                 ])
             ).pipe(
-                takeWhile(() => this._state === ScanState.Loading),
                 map(([{ name, description }, { mtime }, { size }]) => ({
                     size,
                     name,

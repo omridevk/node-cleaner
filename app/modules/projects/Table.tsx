@@ -12,7 +12,6 @@ import {
     useRowSelect,
     useSortBy,
     useTable,
-    useRowState
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
@@ -62,8 +61,8 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
-                              .toLowerCase()
-                              .startsWith(String(filterValue).toLowerCase())
+                            .toLowerCase()
+                            .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
             }
@@ -113,6 +112,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             initialState: {
                 sortBy: defaultSortBy
             },
+            getRowId: React.useCallback(row => row.path, []),
             defaultColumn,
             data: projects
         },
