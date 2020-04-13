@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React from 'react';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -6,6 +6,7 @@ import { createStyles } from '@material-ui/core';
 import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import Alert from '@material-ui/lab/Alert';
+import { ProjectStatus } from '../../types/Project';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -33,15 +34,19 @@ interface RowsProps {
 export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef(
     ({ rows, prepareRow, toggleRowSelected, handleContextMenuOpen }, _) => {
         {
-            const handleClick = (
+            const handleContextMenu = (
                 event: React.MouseEvent<any>,
                 row: Row<ProjectData>
             ) => {
+                const { original: project } = row;
+                if (project.status === ProjectStatus.Deleting) {
+                    return;
+                }
                 event.preventDefault();
                 handleContextMenuOpen({
                     mouseX: event.clientX - 2,
                     mouseY: event.clientY - 4,
-                    project: row.original
+                    project
                 });
             };
 
@@ -55,15 +60,28 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                     </tr>
                 );
             }
+            function handleRowClicked(row: Row<ProjectData>) {
+                const { original: project } = row;
+                if (project.status === ProjectStatus.Deleting) {
+                    return;
+                }
+                toggleRowSelected(row.id);
+            }
 
             return rows.map(row => {
                 prepareRow(row);
+                const { original: project } = row;
                 return (
                     <TableRow
-                        onContextMenu={event => handleClick(event, row)}
+                        onContextMenu={event => handleContextMenu(event, row)}
                         {...row.getRowProps()}
-                        classes={{ root: classes.rowRoot }}
-                        onClick={() => toggleRowSelected(row.id)}
+                        classes={{
+                            root:
+                                project.status === ProjectStatus.Deleting
+                                    ? ''
+                                    : classes.rowRoot
+                        }}
+                        onClick={() => handleRowClicked(row)}
                     >
                         {row.cells.map(cell => {
                             return (

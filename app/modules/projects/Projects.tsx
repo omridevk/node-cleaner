@@ -19,14 +19,12 @@ const Projects: React.FC<{
         foldersScanned,
         resetScan,
         projects,
-        resetProjects,
         toggleDarkMode
     } = useContext(ProjectDataContext);
     const loading = scanning === ScanState.Loading;
     const history = useHistory();
     function cancelScan() {
         stopScan();
-        resetProjects!();
         history.push('/home');
     }
     function deleteAll() {

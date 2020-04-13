@@ -17,7 +17,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
-
+import { head } from 'ramda';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -145,10 +145,15 @@ export const Toolbar = React.forwardRef(
                 <DeleteProjectsDialog
                     visible={showDeleteModal}
                     projects={projects}
+                    agreeMessage={
+                        projects.length > 1
+                            ? 'Deleting projects...'
+                            : `Deleting project ${head(projects)?.name}`
+                    }
+                    agreeMessageVariant={'info'}
                     handleAgree={() => {
                         setShowDeleteModal(false);
                         deleteProjects(projects);
-                        // dispatch(Messages.DELETE_PROJECTS, projects);
                     }}
                     handleModalClosed={() => {
                         setShowDeleteModal(false);

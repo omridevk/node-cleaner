@@ -7,6 +7,8 @@ import { ProjectDataContext } from './Root';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import { useLocation } from 'react-router';
 import { ScanState } from '../hooks/useScan';
+import { useSnackbar } from 'notistack';
+import { head } from 'ramda';
 
 const Alert = (props: AlertProps) => (
     <MuiAlert elevation={6} variant="filled" {...props} />
@@ -21,7 +23,7 @@ export default function ProjectPage() {
         totalSizeString
     } = useContext(ProjectDataContext);
     const location = useLocation<{ directories: string[] }>();
-    const {scanning} = state;
+    const { scanning } = state;
     let directories = location.state.directories;
     useEffect(() => {
         startScan(directories);
@@ -52,15 +54,24 @@ export default function ProjectPage() {
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                 autoHideDuration={4000}
             >
-                <Alert severity="success">
+                <Alert severity="info">
                     Found {projects.length} Projects. Total size{' '}
                     {totalSizeString}
                 </Alert>
             </Snackbar>
+            {/* Delete Single project
+            TODO: find a way to have one delete project dialog modal
+            */}
             <DeleteProjectsDialog
                 handleModalClosed={() => {
                     setShowDialog(false);
                 }}
+                agreeMessage={
+                    deleted.length > 1
+                        ? 'Deleting projects...'
+                        : `Deleting project ${head(deleted)?.name}`
+                }
+                agreeMessageVariant={'info'}
                 visible={showDialog}
                 projects={deleted}
                 handleAgree={() => {

@@ -1,11 +1,10 @@
 import { exec } from 'child_process';
 import head from 'ramda/src/head';
-import electronLog from 'electron-log';
-const logger = electronLog.create('get-drives');
 import { list } from 'drivelist';
 import { EMPTY, from, Observable } from 'rxjs';
 import { isDarwin, isLinux, isWin } from '../constants';
 import { map, tap } from 'rxjs/operators';
+import * as logger from 'electron-log';
 
 export interface Drive {
     name: string | null;

@@ -40,6 +40,7 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const { projects = [], deletedProjects } = useContext(ProjectDataContext);
+
     const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
         project: null,
         mouseX: null,

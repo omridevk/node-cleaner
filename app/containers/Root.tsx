@@ -19,6 +19,8 @@ import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import { SnackbarProvider } from 'notistack';
+import { maximumSnackbars } from '../constants';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -43,7 +45,6 @@ export const ProjectDataContext = React.createContext<{
     foldersScanned: number;
     toggleDarkMode: () => void;
     deletedProjects: ProjectData[];
-    resetProjects?: () => void;
     resetScan: () => void;
     deleteProjects: (projects: ProjectData[]) => void;
     darkMode: boolean;
@@ -60,14 +61,6 @@ type Props = {
     store: any;
     history: History;
 };
-
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        backdrop: {
-            zIndex: theme.zIndex.drawer + 1
-        }
-    })
-);
 
 const darkTheme = createMuiTheme({
     palette: {
@@ -90,7 +83,6 @@ const Root = ({ store, history }: Props) => {
         startScan,
         resetScan,
         deleteProjects,
-        resetProjects,
         foldersScanned,
         deletedProjects,
         state,
@@ -98,45 +90,39 @@ const Root = ({ store, history }: Props) => {
         totalSizeString
     } = useScan();
 
-    const { deleting } = state;
-    const isDeleting = deleting === DeleteState.Deleting;
-    const classes = useStyles();
     return (
         <>
             <ThemeProvider theme={darkMode ? darkTheme : theme}>
-                <CssBaseline />
-                <ProjectDataContext.Provider
-                    value={{
-                        drives,
-                        resetScan,
-                        foldersScanned,
-                        darkMode,
-                        resumeScan,
-                        startScan,
-                        deleteProjects,
-                        deletedProjects,
-                        stopScan,
-                        pauseScan,
-                        toggleDarkMode: () =>
-                            setDarkMode(prevState => !prevState),
-                        resetProjects,
-                        projects,
-                        state,
-                        totalSizeString
-                    }}
-                >
-                    <Provider store={store}>
-                        <ConnectedRouter history={history}>
-                            <Backdrop
-                                open={isDeleting}
-                                classes={{ root: classes.backdrop }}
-                            >
-                                <CircularProgress color="inherit" />
-                            </Backdrop>
-                            <Routes />
-                        </ConnectedRouter>
-                    </Provider>
-                </ProjectDataContext.Provider>
+                <SnackbarProvider maxSnack={maximumSnackbars}>
+                    <>
+                        <CssBaseline />
+                        <ProjectDataContext.Provider
+                            value={{
+                                drives,
+                                resetScan,
+                                foldersScanned,
+                                darkMode,
+                                resumeScan,
+                                startScan,
+                                deleteProjects,
+                                deletedProjects,
+                                stopScan,
+                                pauseScan,
+                                toggleDarkMode: () =>
+                                    setDarkMode(prevState => !prevState),
+                                projects,
+                                state,
+                                totalSizeString
+                            }}
+                        >
+                            <Provider store={store}>
+                                <ConnectedRouter history={history}>
+                                    <Routes />
+                                </ConnectedRouter>
+                            </Provider>
+                        </ProjectDataContext.Provider>
+                    </>
+                </SnackbarProvider>
             </ThemeProvider>
         </>
     );
