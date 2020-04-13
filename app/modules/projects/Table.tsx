@@ -11,7 +11,8 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable
+    useTable,
+    useRowState
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
@@ -135,6 +136,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     return (
         <>
             <Toolbar
+                toggleAllRowsSelected={toggleAllRowsSelected}
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}
                 setGlobalFilter={setGlobalFilter}
@@ -142,9 +144,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                 selectedRowIds={selectedRowIds}
                 onDeleteSelected={onDeleteSelected}
             />
-            <MaUTable {...getTableProps()}>
+            <MaUTable component="div" {...getTableProps()}>
                 <TableHead headerGroups={headerGroups} />
-                <TableBody>
+                <TableBody component="div">
                     <Rows
                         handleContextMenuOpen={setContextMenuState}
                         rows={rows}
@@ -153,7 +155,10 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <Popups contextMenuState={contextMenuState} />
+            <Popups
+                toggleAllRowsSelected={toggleAllRowsSelected}
+                contextMenuState={contextMenuState}
+            />
         </>
     );
 }

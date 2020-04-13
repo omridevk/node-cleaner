@@ -1,7 +1,7 @@
 import { Finder } from '../utils/finder';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ProjectData } from '../types';
-import { catchError, first, map, tap } from 'rxjs/operators';
+import { catchError, delay, first, map, tap } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
 import path from 'path';
 import { EMPTY, forkJoin, from } from 'rxjs';
@@ -12,9 +12,7 @@ import fs from 'fs-extra';
 import { useCalculateSize } from './useCalculateSize';
 import * as logger from 'electron-log';
 
-
 // const logger = log.scope("use-scan-hook");
-
 
 export enum ScanState {
     Loading = 'loading',
@@ -77,6 +75,8 @@ function reducer(state: State, action: any): State {
     }
 }
 
+const demoMode = !!process.env.DEMO_MODE;
+
 export const useScan = () => {
     const finder = useRef<Finder>();
     if (!finder.current) {
@@ -112,14 +112,16 @@ export const useScan = () => {
             )
         );
         forkJoin(
-            paths.map(path =>
-                from(fs.remove(path)).pipe(
-                    catchError(e => {
-                        console.error(e);
-                        return EMPTY;
-                    })
-                )
-            )
+            demoMode
+                ? from([0]).pipe(delay(5000))
+                : paths.map(path =>
+                      from(fs.remove(path)).pipe(
+                          catchError(e => {
+                              console.error(e);
+                              return EMPTY;
+                          })
+                      )
+                  )
         )
             .pipe(first())
             .subscribe(

@@ -27,7 +27,6 @@ import { ProjectStatus } from '../types/Project';
 import * as log from 'electron-log';
 const logger = log.scope('finder');
 
-
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
 
 let walkers = 0;
@@ -108,7 +107,7 @@ export class Finder {
         this._scanReset.next(false);
         this._foldersScanned.next(0);
         const directories = Array.isArray(location) ? location : [location];
-        logger.info(`starting to scan ${directories.join(",")}`)
+        logger.info(`starting to scan ${directories.join(',')}`);
 
         directories.forEach(directory => {
             this._walkers.push(
@@ -204,6 +203,7 @@ export class Finder {
                 map(([{ name, description }, { mtime }, { size }]) => ({
                     size,
                     name,
+                    key: entry.fullPath,
                     status: ProjectStatus.Active,
                     description,
                     lastModified: mtime,

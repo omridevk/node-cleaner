@@ -53,11 +53,11 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
             const classes = useStyles();
             if (!rows.length) {
                 return (
-                    <tr>
-                        <td>
+                    <div>
+                        <div>
                             <Alert severity={'warning'}>No Results found</Alert>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 );
             }
             function handleRowClicked(row: Row<ProjectData>) {
@@ -73,6 +73,7 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                 const { original: project } = row;
                 return (
                     <TableRow
+                        component="div"
                         onContextMenu={event => handleContextMenu(event, row)}
                         {...row.getRowProps()}
                         classes={{
@@ -86,6 +87,7 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                         {row.cells.map(cell => {
                             return (
                                 <TableCell
+                                    component="div"
                                     {...cell.getCellProps()}
                                     classes={{ root: classes.cellRoot }}
                                 >

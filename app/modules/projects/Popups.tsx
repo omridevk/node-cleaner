@@ -19,9 +19,10 @@ import { head } from 'ramda';
 
 interface Props {
     contextMenuState: ContextMenuState;
+    toggleAllRowsSelected: (value?: boolean) => void;
 }
 
-export const Popups: React.FC<Props> = ({ contextMenuState }) => {
+export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelected }) => {
     const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
     useEffect(() => {
         if (!deletedProjects.length) {
@@ -130,6 +131,7 @@ export const Popups: React.FC<Props> = ({ contextMenuState }) => {
                 agreeMessageVariant={'info'}
                 projects={deletedProject ? [deletedProject] : []}
                 handleAgree={() => {
+                    toggleAllRowsSelected(false);
                     setDeletedProject(null);
                     deleteProjects([deletedProject!]);
                 }}

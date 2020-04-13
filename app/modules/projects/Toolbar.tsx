@@ -10,14 +10,12 @@ import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ClearIcon from '@material-ui/icons/Clear';
 import SearchIcon from '@material-ui/icons/Search';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo } from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { createStyles, lighten, Theme } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
-import DeleteProjectsDialog from './DeleteProjectsDialog';
-import { head } from 'ramda';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -110,8 +108,7 @@ export const Toolbar = React.forwardRef(
         _
     ) => {
         const classes = useToolbarStyles();
-        const [showDeleteModal, setShowDeleteModal] = useState(false);
-        const { deleteProjects, totalSizeString, projects = [] } = useContext(
+        const { totalSizeString, projects = [] } = useContext(
             ProjectDataContext
         );
         const numSelected = Object.keys(selectedRowIds).length;
@@ -141,62 +138,40 @@ export const Toolbar = React.forwardRef(
         };
 
         return (
-            <>
-                <DeleteProjectsDialog
-                    visible={showDeleteModal}
-                    projects={projects}
-                    agreeMessage={
-                        projects.length > 1
-                            ? 'Deleting projects...'
-                            : `Deleting project ${head(projects)?.name}`
-                    }
-                    agreeMessageVariant={'info'}
-                    handleAgree={() => {
-                        setShowDeleteModal(false);
-                        deleteProjects(projects);
-                    }}
-                    handleModalClosed={() => {
-                        setShowDeleteModal(false);
-                    }}
-                />
-                <MaUToolbar
-                    className={clsx(classes.root, {
-                        [classes.highlight]: numSelected > 0
-                    })}
+            <MaUToolbar
+                className={clsx(classes.root, {
+                    [classes.highlight]: numSelected > 0
+                })}
+            >
+                <Header numSelected={numSelected} />
+                <Typography
+                    className={clsx(classes.title, classes.actionsContainer)}
+                    color="inherit"
+                    variant="subtitle1"
                 >
-                    <Header numSelected={numSelected} />
-                    <Typography
-                        className={clsx(
-                            classes.title,
-                            classes.actionsContainer
-                        )}
-                        color="inherit"
-                        variant="subtitle1"
-                    >
-                        {projects.length} Projects found , size:
-                        {numSelected
-                            ? `  ${totalSelectedSize}/${totalSizeString}`
-                            : `  ${totalSizeString}`}
-                    </Typography>
-                    <SearchField
-                        preGlobalFilteredRows={preGlobalFilteredRows}
-                        globalFilter={globalFilter}
-                        setGlobalFilter={setGlobalFilter}
-                    />
-                    <div className={classes.actionsContainer}>
-                        {numSelected > 0 ? (
-                            <Tooltip title="Delete Selected">
-                                <IconButton
-                                    aria-label="delete selected"
-                                    onClick={handleDeleteSelected}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
-                        ) : null}
-                    </div>
-                </MaUToolbar>
-            </>
+                    {projects.length} Projects found , size:
+                    {numSelected
+                        ? `  ${totalSelectedSize}/${totalSizeString}`
+                        : `  ${totalSizeString}`}
+                </Typography>
+                <SearchField
+                    preGlobalFilteredRows={preGlobalFilteredRows}
+                    globalFilter={globalFilter}
+                    setGlobalFilter={setGlobalFilter}
+                />
+                <div className={classes.actionsContainer}>
+                    {numSelected > 0 ? (
+                        <Tooltip title="Delete Selected">
+                            <IconButton
+                                aria-label="delete selected"
+                                onClick={handleDeleteSelected}
+                            >
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    ) : null}
+                </div>
+            </MaUToolbar>
         );
     }
 );
