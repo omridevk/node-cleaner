@@ -1,11 +1,11 @@
-import React, { useCallback, useContext } from 'react';
-import { defaultColumns } from './columns';
+import React, { useCallback, useContext, useMemo } from 'react';
 import { ProjectData } from '../../types';
 import { Table } from './Table';
 import { Header } from './Header';
 import { ProjectDataContext } from '../../containers/Root';
 import { ScanState } from '../../hooks/useScan';
 import { useHistory } from 'react-router';
+import { defaultColumns } from './columns';
 
 const Projects: React.FC<{
     onDeleteProjects: (projects: ProjectData[]) => void;
@@ -23,6 +23,7 @@ const Projects: React.FC<{
     } = useContext(ProjectDataContext);
     const loading = scanning === ScanState.Loading;
     const history = useHistory();
+    const columns = useMemo(() => defaultColumns, []);
     function cancelScan() {
         stopScan();
         history.push('/home');
@@ -58,7 +59,7 @@ const Projects: React.FC<{
             <Table
                 onDeleteSelected={onDeleteProjects}
                 onDeleteRow={project => onDeleteProjects([project])}
-                columns={defaultColumns()}
+                columns={columns}
             />
         </>
     );

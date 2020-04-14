@@ -11,11 +11,11 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable,
+    useTable
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { DefaultColumnFilter, extraColumns } from './columns';
+import { DefaultColumnFilter, extraColumns, useExtraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -61,8 +61,8 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
-                            .toLowerCase()
-                            .startsWith(String(filterValue).toLowerCase())
+                              .toLowerCase()
+                              .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
             }

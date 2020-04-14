@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FilterValue, Hooks, IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
@@ -94,89 +94,84 @@ export const DefaultColumnFilter = () => {
     return null;
 };
 
-export const defaultColumns = () =>
-    useMemo(
-        () => [
-            {
-                Header: 'Name',
-                accessor: 'name',
-                defaultCanFilter: true,
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { name }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip
-                            title={name || ''}
-                            aria-label={name || ''}
-                            placement="top"
-                        >
-                            <div className={classes.cellText}>{name}</div>
-                        </Tooltip>
-                    );
-                }
-            },
-            {
-                Header: 'Size',
-                accessor: 'size',
-                sortInverted: true,
-                Filter: SliderColumnFilter,
-                filter: filterGreaterThan,
-                Cell: ({ row }: { row: Row<ProjectData> }) => (
-                    <div>{formatByBytes(row.original.size)}</div>
-                ),
-                disableResizing: true
-            },
-            {
-                Header: 'Last modified',
-                accessor: 'lastModified',
-                defaultCanFilter: false,
-                sortType: 'datetime',
-                Cell: ({ row }: { row: Row<ProjectData> }) => (
-                    <div>{moment(row.original.lastModified).fromNow()}</div>
-                ),
-                disableResizing: true
-            },
-            {
-                Header: 'Description',
-                accessor: 'description',
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { description }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip
-                            title={description || ''}
-                            aria-label={description || ''}
-                            placement="top"
-                        >
-                            <div className={classes.cellText}>
-                                {description}
-                            </div>
-                        </Tooltip>
-                    );
-                }
-            },
-            {
-                Header: 'Full Path',
-                accessor: 'path',
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { path }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip title={path} aria-label={path} placement="top">
-                            <div className={classes.cellText}>{path}</div>
-                        </Tooltip>
-                    );
-                }
-            }
-        ],
-        []
-    );
+export const defaultColumns = [
+    {
+        Header: 'Name',
+        accessor: 'name',
+        defaultCanFilter: true,
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { name }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip
+                    title={name || ''}
+                    aria-label={name || ''}
+                    placement="top"
+                >
+                    <div className={classes.cellText}>{name}</div>
+                </Tooltip>
+            );
+        }
+    },
+    {
+        Header: 'Size',
+        accessor: 'size',
+        sortInverted: true,
+        Filter: SliderColumnFilter,
+        filter: filterGreaterThan,
+        Cell: ({ row }: { row: Row<ProjectData> }) => (
+            <div>{formatByBytes(row.original.size)}</div>
+        ),
+        disableResizing: true
+    },
+    {
+        Header: 'Last modified',
+        accessor: 'lastModified',
+        defaultCanFilter: false,
+        sortType: 'datetime',
+        Cell: ({ row }: { row: Row<ProjectData> }) => (
+            <div>{moment(row.original.lastModified).fromNow()}</div>
+        ),
+        disableResizing: true
+    },
+    {
+        Header: 'Description',
+        accessor: 'description',
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { description }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip
+                    title={description || ''}
+                    aria-label={description || ''}
+                    placement="top"
+                >
+                    <div className={classes.cellText}>{description}</div>
+                </Tooltip>
+            );
+        }
+    },
+    {
+        Header: 'Full Path',
+        accessor: 'path',
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { path }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip title={path} aria-label={path} placement="top">
+                    <div className={classes.cellText}>{path}</div>
+                </Tooltip>
+            );
+        }
+    }
+];
+
 
 export const extraColumns = ({
     onDeleteRow,
