@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { hot } from 'react-hot-loader/root';
 import { Provider } from 'react-redux';
 import { History } from 'history';
@@ -6,21 +6,17 @@ import { ConnectedRouter } from 'connected-react-router';
 import { ProjectData } from '../types';
 import Routes from '../Routes';
 import {
-    createStyles,
     CssBaseline,
-    Theme,
     ThemeProvider
 } from '@material-ui/core';
 import { Drive } from '../utils/list-drives';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
-import { noop } from '../utils/helpers';
+import { formatByBytes, noop } from '../utils/helpers';
 import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
-import Backdrop from '@material-ui/core/Backdrop';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import { SnackbarProvider } from 'notistack';
 import { maximumSnackbars } from '../constants';
+import checkDiskSpace from 'check-disk-space';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -30,7 +26,8 @@ const defaultContext = {
     foldersScanned: 0,
     deletedProjects: [],
     resetScan: noop,
-    startScan: (_: any) => {},
+    startScan: (_: any) => {
+    },
     pauseScan: noop,
     stopScan: noop,
     deleteProjects: noop,
@@ -89,13 +86,19 @@ const Root = ({ store, history }: Props) => {
         drives,
         totalSizeString
     } = useScan();
+    useEffect(() => {
+        checkDiskSpace('/').then(({ free, size }) => console.log({
+            free: formatByBytes(free),
+            size: formatByBytes(size)
+        }));
+    }, []);
 
     return (
         <>
             <ThemeProvider theme={darkMode ? darkTheme : theme}>
                 <SnackbarProvider maxSnack={maximumSnackbars}>
                     <>
-                        <CssBaseline />
+                        <CssBaseline/>
                         <ProjectDataContext.Provider
                             value={{
                                 drives,
@@ -117,7 +120,7 @@ const Root = ({ store, history }: Props) => {
                         >
                             <Provider store={store}>
                                 <ConnectedRouter history={history}>
-                                    <Routes />
+                                    <Routes/>
                                 </ConnectedRouter>
                             </Provider>
                         </ProjectDataContext.Provider>

@@ -1,6 +1,6 @@
 import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
-import { formatByBytes } from '../../utils/helpers';
+import { formatByBytes, sumSize } from '../../utils/helpers';
 import * as R from 'ramda';
 import Typography from '@material-ui/core/Typography';
 import MaUToolbar from '@material-ui/core/Toolbar';
@@ -16,6 +16,7 @@ import { createStyles, lighten, Theme } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
+import { compose } from 'ramda';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -45,16 +46,16 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
         highlight:
             theme.palette.type === 'light'
                 ? {
-                      color: theme.palette.secondary.main,
-                      backgroundColor: lighten(
-                          theme.palette.secondary.light,
-                          0.85
-                      )
-                  }
+                    color: theme.palette.secondary.main,
+                    backgroundColor: lighten(
+                        theme.palette.secondary.light,
+                        0.85
+                    )
+                }
                 : {
-                      color: theme.palette.text.primary,
-                      backgroundColor: theme.palette.secondary.dark
-                  },
+                    color: theme.palette.text.primary,
+                    backgroundColor: theme.palette.secondary.dark
+                },
         title: {
             flex: '1 1 40%'
         }
@@ -62,10 +63,10 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
 );
 
 const SearchField = ({
-    preGlobalFilteredRows,
-    globalFilter,
-    setGlobalFilter
-}: any) => {
+                         preGlobalFilteredRows,
+                         globalFilter,
+                         setGlobalFilter
+                     }: any) => {
     const count = preGlobalFilteredRows.length;
     return (
         <TextField
@@ -76,7 +77,7 @@ const SearchField = ({
                 startAdornment: (
                     <InputAdornment position="start">
                         <Tooltip title={'Search'}>
-                            <SearchIcon color="inherit" fontSize="small" />
+                            <SearchIcon color="inherit" fontSize="small"/>
                         </Tooltip>
                     </InputAdornment>
                 ),
@@ -86,12 +87,33 @@ const SearchField = ({
                             disabled={!globalFilter}
                             onClick={() => setGlobalFilter('')}
                         >
-                            <ClearIcon color="inherit" fontSize="small" />
+                            <ClearIcon color="inherit" fontSize="small"/>
                         </IconButton>
                     </InputAdornment>
                 )
             }}
         />
+    );
+};
+
+interface HeaderProps {
+    numSelected: number,
+    projects: ProjectData[],
+    totalSizeString?: string
+    totalSelectedSize?: string;
+}
+
+const Header = ({ numSelected, projects = [], totalSizeString = '', totalSelectedSize = '' }: HeaderProps) => {
+    const classes = useToolbarStyles();
+    return (
+        <Typography
+            className={classes.title}
+            color="inherit"
+            variant="subtitle1"
+        >
+            {numSelected ? `${numSelected}/${projects.length} selected, size: ${totalSelectedSize}` : ''}{' '}
+            {!numSelected ? `${projects.length} Projects found, total size: ${totalSizeString}` : ''}
+        </Typography>
     );
 };
 
@@ -113,29 +135,13 @@ export const Toolbar = React.forwardRef(
         );
         const numSelected = Object.keys(selectedRowIds).length;
         const totalSelectedSize = useMemo(() => {
-            return formatByBytes(
-                R.sum(selectedFlatRows.map(row => row.original.size as number))
-            );
-        }, [numSelected]);
+            const calculateTotalSize = compose(formatByBytes, sumSize);
+            return calculateTotalSize(selectedFlatRows.map(row => row.original));
+        }, [selectedRowIds]);
+
         function handleDeleteSelected() {
             onDeleteSelected(selectedFlatRows.map(row => row.original));
         }
-        const Header = ({ numSelected }: { numSelected: number }) => {
-            if (!numSelected) {
-                return null;
-            }
-            return (
-                <Typography
-                    className={classes.title}
-                    color="inherit"
-                    variant="subtitle1"
-                >
-                    {numSelected
-                        ? `${numSelected} projects selected`
-                        : 'Projects'}
-                </Typography>
-            );
-        };
 
         return (
             <MaUToolbar
@@ -143,17 +149,8 @@ export const Toolbar = React.forwardRef(
                     [classes.highlight]: numSelected > 0
                 })}
             >
-                <Header numSelected={numSelected} />
-                <Typography
-                    className={clsx(classes.title, classes.actionsContainer)}
-                    color="inherit"
-                    variant="subtitle1"
-                >
-                    {projects.length} Projects found , size:
-                    {numSelected
-                        ? `  ${totalSelectedSize}/${totalSizeString}`
-                        : `  ${totalSizeString}`}
-                </Typography>
+                <Header projects={projects} totalSelectedSize={totalSelectedSize} totalSizeString={totalSizeString}
+                        numSelected={numSelected}/>
                 <SearchField
                     preGlobalFilteredRows={preGlobalFilteredRows}
                     globalFilter={globalFilter}
@@ -166,7 +163,7 @@ export const Toolbar = React.forwardRef(
                                 aria-label="delete selected"
                                 onClick={handleDeleteSelected}
                             >
-                                <DeleteIcon />
+                                <DeleteIcon/>
                             </IconButton>
                         </Tooltip>
                     ) : null}

@@ -1,3 +1,10 @@
+import sum from 'ramda/src/sum';
+import map from 'ramda/src/map';
+import prop from 'ramda/src/prop';
+import { compose } from 'ramda';
+
+export const sumSize = compose(sum, map(prop('size')));
+
 export const formatByBytes = (bytes: number, decimals = 0): string => {
     if (bytes == 0) return '0 Bytes';
     const k = 1024;

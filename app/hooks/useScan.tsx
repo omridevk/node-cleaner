@@ -91,6 +91,9 @@ export const useScan = () => {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle
     });
+
+
+
     const totalSizeString = useCalculateSize(projects);
     function startScan(dir: string | string[]) {
         finder.current!.start(dir);
