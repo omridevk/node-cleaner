@@ -86,12 +86,6 @@ const Root = ({ store, history }: Props) => {
         drives,
         totalSizeString
     } = useScan();
-    useEffect(() => {
-        checkDiskSpace('/').then(({ free, size }) => console.log({
-            free: formatByBytes(free),
-            size: formatByBytes(size)
-        }));
-    }, []);
 
     return (
         <>

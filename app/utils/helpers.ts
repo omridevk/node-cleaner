@@ -2,8 +2,8 @@ import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
 import { compose } from 'ramda';
-
-export const sumSize = compose(sum, map(prop('size')));
+export const sumBy = (name: string) => compose(sum, map(prop(name)));
+export const sumBySize = sumBy('size');
 
 export const formatByBytes = (bytes: number, decimals = 0): string => {
     if (bytes == 0) return '0 Bytes';
@@ -14,4 +14,5 @@ export const formatByBytes = (bytes: number, decimals = 0): string => {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
-export const noop = () => {};
+export const noop = () => {
+};

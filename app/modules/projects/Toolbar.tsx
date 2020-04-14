@@ -1,6 +1,6 @@
 import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
-import { formatByBytes, sumSize } from '../../utils/helpers';
+import { formatByBytes, sumBySize } from '../../utils/helpers';
 import * as R from 'ramda';
 import Typography from '@material-ui/core/Typography';
 import MaUToolbar from '@material-ui/core/Toolbar';
@@ -135,7 +135,7 @@ export const Toolbar = React.forwardRef(
         );
         const numSelected = Object.keys(selectedRowIds).length;
         const totalSelectedSize = useMemo(() => {
-            const calculateTotalSize = compose(formatByBytes, sumSize);
+            const calculateTotalSize = compose(formatByBytes, sumBySize);
             return calculateTotalSize(selectedFlatRows.map(row => row.original));
         }, [selectedRowIds]);
 
