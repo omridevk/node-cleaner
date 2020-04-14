@@ -35,7 +35,7 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
     ({ rows, prepareRow, toggleRowSelected, handleContextMenuOpen }, _) => {
         {
             const handleContextMenu = (
-                event: React.MouseEvent<any>,
+                event: React.MouseEvent<HTMLDivElement>,
                 row: Row<ProjectData>
             ) => {
                 const { original: project } = row;
@@ -48,6 +48,13 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                     mouseY: event.clientY - 4,
                     project
                 });
+                // clear selection when opening
+                // context menu
+                const selection = window.getSelection();
+                if (selection === null) {
+                    return;
+                }
+                selection.empty();
             };
 
             const classes = useStyles();

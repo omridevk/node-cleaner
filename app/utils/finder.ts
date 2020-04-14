@@ -75,7 +75,6 @@ export class Finder {
 
     public onScanEnd = this._onScanEnd.asObservable().pipe(
         filter(Boolean),
-        tap(() => logger.info(this._foldersScanned.getValue())),
         tap(() => this.logExecutionTime()),
         delay(2500)
     );
