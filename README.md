@@ -8,8 +8,8 @@ yarn dev
 
 #### Demo mode
 
-start the app in the development mode but all deletetion of directories will be mocked
-good for testing functionality without actually deleting files from the file system.
+start the app in the development mode but all deletetion of directories will be mocked (i.e node_modules directory will not be deleted).
+Good for testing functionality without actually deleting files from the file system.
 
 ```bash
 yarn dev-demo
