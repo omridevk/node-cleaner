@@ -108,7 +108,7 @@ export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelecte
                         {message}
                     </Typography>
                     <Typography variant={'subtitle2'}>
-                        Total spaced freed: {deletedTotalSize}
+                        Total space freed: {deletedTotalSize}
                     </Typography>
                 </MuiAlert>
             </Snackbar>
