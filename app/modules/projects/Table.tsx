@@ -11,7 +11,7 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable
+    useTable,
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
@@ -40,6 +40,7 @@ interface TableProps {
 }
 export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     const { projects = [], deletedProjects } = useContext(ProjectDataContext);
+
     const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
         project: null,
         mouseX: null,
@@ -60,8 +61,8 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
-                              .toLowerCase()
-                              .startsWith(String(filterValue).toLowerCase())
+                            .toLowerCase()
+                            .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
             }
@@ -111,6 +112,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             initialState: {
                 sortBy: defaultSortBy
             },
+            getRowId: React.useCallback(row => row.path, []),
             defaultColumn,
             data: projects
         },
@@ -134,6 +136,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
     return (
         <>
             <Toolbar
+                toggleAllRowsSelected={toggleAllRowsSelected}
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}
                 setGlobalFilter={setGlobalFilter}
@@ -141,9 +144,9 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                 selectedRowIds={selectedRowIds}
                 onDeleteSelected={onDeleteSelected}
             />
-            <MaUTable {...getTableProps()}>
+            <MaUTable component="div" {...getTableProps()}>
                 <TableHead headerGroups={headerGroups} />
-                <TableBody>
+                <TableBody component="div">
                     <Rows
                         handleContextMenuOpen={setContextMenuState}
                         rows={rows}
@@ -152,7 +155,10 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <Popups contextMenuState={contextMenuState} />
+            <Popups
+                toggleAllRowsSelected={toggleAllRowsSelected}
+                contextMenuState={contextMenuState}
+            />
         </>
     );
 }

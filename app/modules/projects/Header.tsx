@@ -118,10 +118,10 @@ export const Header: React.FC<Props> = ({
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title={'Delete All'}>
+                    <Tooltip title={loading ? 'Scanning' : 'Delete All'}>
                         <span>
                             <IconButton
-                                disabled={!projects.length}
+                                disabled={!projects.length || loading}
                                 aria-label="delete selected"
                                 onClick={onDeleteAll}
                             >

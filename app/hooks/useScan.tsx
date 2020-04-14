@@ -1,21 +1,19 @@
 import { Finder } from '../utils/finder';
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { ProjectData } from '../types';
-import { tap, first, catchError } from 'rxjs/operators';
+import { catchError, delay, first, map, tap } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
-import compose from 'ramda/src/compose';
-import sum from 'ramda/src/sum';
-import map from 'ramda/src/map';
-import prop from 'ramda/src/prop';
-import { formatByBytes } from '../utils/helpers';
-import * as electronLog from 'electron-log';
 import path from 'path';
-import * as R from 'ramda';
 import { EMPTY, forkJoin, from } from 'rxjs';
 import chalk from 'chalk';
+import { ProjectStatus } from '../types/Project';
+import { eqBy, prop, unionWith } from 'ramda';
 import fs from 'fs-extra';
+import { useCalculateSize } from './useCalculateSize';
+import * as logger from 'electron-log';
 
-const logger = electronLog.create('use-scan');
+// const logger = log.scope("use-scan-hook");
+
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
@@ -77,6 +75,8 @@ function reducer(state: State, action: any): State {
     }
 }
 
+const demoMode = !!process.env.DEMO_MODE;
+
 export const useScan = () => {
     const finder = useRef<Finder>();
     if (!finder.current) {
@@ -91,10 +91,7 @@ export const useScan = () => {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle
     });
-    const sumSize = compose(sum, map(prop('size')));
-    const totalSizeString = useMemo(() => formatByBytes(sumSize(projects)), [
-        projects
-    ]);
+    const totalSizeString = useCalculateSize(projects);
     function startScan(dir: string | string[]) {
         finder.current!.start(dir);
         folders.current = dir;
@@ -102,6 +99,7 @@ export const useScan = () => {
     }
     function deleteProjects(deletedProjects: ProjectData[]) {
         dispatch({ type: Actions.DeleteProjects });
+        updateProjectsStatus(deletedProjects, ProjectStatus.Deleting);
         const paths = deletedProjects.map(
             project => `${path.join(project.path, 'node_modules')}`
         );
@@ -114,37 +112,45 @@ export const useScan = () => {
             )
         );
         forkJoin(
-            paths.map(path =>
-                from(fs.remove(path)).pipe(
-                    catchError(e => {
-                        logger.error(e);
-                        return EMPTY;
-                    })
-                )
-            )
+            demoMode
+                ? from([0]).pipe(delay(5000))
+                : paths.map(path =>
+                      from(fs.remove(path)).pipe(
+                          catchError(e => {
+                              console.error(e);
+                              return EMPTY;
+                          })
+                      )
+                  )
         )
-            // exec(`rm -rf ${paths}`)
             .pipe(first())
             .subscribe(
                 () => {
                     setDeletedProjects(deletedProjects);
-                    const comp = (x: ProjectData, y: ProjectData) =>
-                        x.path === y.path;
-                    finder.current?.updateProjects(
-                        R.differenceWith(comp, projects, deletedProjects)
+                    updateProjectsStatus(
+                        deletedProjects,
+                        ProjectStatus.Deleted
                     );
                     dispatch({ type: Actions.FinishedDelete });
                 },
-                e => console.log(e)
+                e => logger.error(e)
             );
     }
-    function resetProjects() {
-        setProjects([]);
-        setDeletedProjects([]);
+
+    function updateProjectsStatus(
+        updatedProjects: ProjectData[],
+        status: ProjectStatus
+    ) {
+        updatedProjects = updatedProjects.map(project => ({
+            ...project,
+            status: status
+        }));
+        finder.current!.updateProjects(
+            unionWith(eqBy(prop('path')), updatedProjects, projects)
+        );
     }
     function resetScan() {
         finder.current?.destroy();
-        resetProjects();
         dispatch({ type: Actions.Reset });
         if (!folders.current) {
             return;
@@ -174,7 +180,14 @@ export const useScan = () => {
             ?.scanDrives()
             .subscribe(drives => setDrives(drives));
         const getProjectsSub = finder.current?.projects$
-            .pipe(tap(projects => setProjects(projects)))
+            .pipe(
+                map(projects =>
+                    projects.filter(
+                        project => project.status !== ProjectStatus.Deleted
+                    )
+                ),
+                tap(projects => setProjects(projects))
+            )
             .subscribe();
         const subscriptions = [
             getProjectsSub,
@@ -191,7 +204,6 @@ export const useScan = () => {
     return {
         projects,
         startScan,
-        resetProjects,
         deleteProjects,
         deletedProjects,
         totalSizeString,

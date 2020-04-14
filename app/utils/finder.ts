@@ -19,13 +19,14 @@ import * as R from 'ramda';
 import { without } from 'ramda';
 import { ProjectData } from '../types';
 import { checkUnix, checkWin32 } from './check-size';
-import * as electronLog from 'electron-log';
 import moment from 'moment';
 import { Drive, listDrives } from './list-drives';
 import { ignoredFolders } from '../constants/ignoredFolders';
 import { ScanState } from '../hooks/useScan';
+import { ProjectStatus } from '../types/Project';
+import * as log from 'electron-log';
+const logger = log.scope('finder');
 
-const logger = electronLog.create('finder');
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
 
 let walkers = 0;
@@ -106,6 +107,7 @@ export class Finder {
         this._scanReset.next(false);
         this._foldersScanned.next(0);
         const directories = Array.isArray(location) ? location : [location];
+        logger.info(`starting to scan ${directories.join(',')}`);
 
         directories.forEach(directory => {
             this._walkers.push(
@@ -149,7 +151,9 @@ export class Finder {
         if (!this._walkers.length) {
             return;
         }
+        walkers = 0;
         this._removeListeners();
+        this._projects.next([]);
         this._walkers.forEach(walker => walker.destroy());
         this._walkers = [];
     }
@@ -159,6 +163,7 @@ export class Finder {
         if (this._walkers.length) {
             return;
         }
+        walkers = 0;
         this._state = ScanState.Finished;
         this._onScanEnd.next(true);
     };
@@ -166,7 +171,7 @@ export class Finder {
     private _addListeners = () => {
         this._walkers.forEach(walker => {
             walker.on('data', this._handleOnScan);
-            walker.on('error', e => console.log(e));
+            walker.on('error', e => logger.log(e));
             walker.on('end', this._handleOnScanEnd(walker));
         });
     };
@@ -194,10 +199,11 @@ export class Finder {
                     checkSize(`${path.join(entry.fullPath, 'node_modules')}`)
                 ])
             ).pipe(
-                takeWhile(() => this._state === ScanState.Loading),
                 map(([{ name, description }, { mtime }, { size }]) => ({
                     size,
                     name,
+                    key: entry.fullPath,
+                    status: ProjectStatus.Active,
                     description,
                     lastModified: mtime,
                     path: entry.fullPath

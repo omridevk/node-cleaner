@@ -64,6 +64,8 @@ const createWindow = async () => {
         await installExtensions();
     }
 
+
+
     mainWindow = new BrowserWindow({
         show: false,
         width: 1024,
@@ -90,7 +92,6 @@ const createWindow = async () => {
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
-
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();
 

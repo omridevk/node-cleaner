@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { ContextMenu } from '../../common/ContextMenu';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
 import { ContextMenuState } from '../../types/ContextMenuState';
-import { isDarwin } from '../../constants';
+import { isDarwin, maximumSnackbars } from '../../constants';
 import { shell } from 'electron';
 import { ProjectData } from '../../types';
 import { ProjectDataContext } from '../../containers/Root';
@@ -13,12 +13,16 @@ import { formatByBytes } from '../../utils/helpers';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
+import { ProjectStatus } from '../../types/Project';
+import { useSnackbar } from 'notistack';
+import { head } from 'ramda';
 
 interface Props {
     contextMenuState: ContextMenuState;
+    toggleAllRowsSelected: (value?: boolean) => void;
 }
 
-export const Popups: React.FC<Props> = ({ contextMenuState }) => {
+export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelected }) => {
     const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
     useEffect(() => {
         if (!deletedProjects.length) {
@@ -32,6 +36,22 @@ export const Popups: React.FC<Props> = ({ contextMenuState }) => {
         [deletedProjects]
     );
     const [deletedProject, setDeletedProject] = useState<ProjectData | null>();
+    const { enqueueSnackbar } = useSnackbar();
+    useEffect(() => {
+        if (deletedProjects.length > maximumSnackbars) {
+            return;
+        }
+        deletedProjects.forEach(project =>
+            enqueueSnackbar(
+                `successfully deleted ${
+                    project.name
+                } (freed space: ${formatByBytes(project.size)})`,
+                {
+                    variant: 'success'
+                }
+            )
+        );
+    }, [deletedProjects]);
 
     function handleDeleteProject() {
         const { project } = contextMenuState;
@@ -49,38 +69,43 @@ export const Popups: React.FC<Props> = ({ contextMenuState }) => {
     }
 
     const contextMenuItems = useMemo(() => {
-        return [
-            {
-                text: 'Delete',
-                action: handleDeleteProject
-            },
+        const { project } = contextMenuState;
+        const menu = [
             {
                 text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
                 action: handleOpenPath
             }
         ];
+        if (project?.status === ProjectStatus.Deleting) {
+            return menu;
+        }
+        return [
+            ...menu,
+            {
+                text: 'Delete',
+                action: handleDeleteProject
+            }
+        ];
     }, [contextMenuState]);
-
+    const message =
+        deletedProjects.length > 1
+            ? `Successfully deleted ${deletedProjects.length} projects`
+            : 'Successfully deleted projects: ';
     return (
         <>
             <Snackbar
                 onClose={() => setShowSnackbar(false)}
-                open={showSnackbar}
+                open={showSnackbar && deletedProjects.length > maximumSnackbars}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                 autoHideDuration={4000}
             >
                 <MuiAlert elevation={6} variant="filled" severity={'success'}>
-                    Successfully deleted
-                    {deletedProjects.length > 1 ? ' projects: ' : ' project: '}
-                    <br />
                     <Typography
                         style={{ maxWidth: '200px' }}
                         noWrap
                         variant="subtitle2"
                     >
-                        {deletedProjects
-                            .map(project => project.name)
-                            .join(', ')}
+                        {message}
                     </Typography>
                     <Typography variant={'subtitle2'}>
                         Total spaced freed: {deletedTotalSize}
@@ -98,8 +123,15 @@ export const Popups: React.FC<Props> = ({ contextMenuState }) => {
                     setDeletedProject(null);
                 }}
                 visible={!!deletedProject}
+                agreeMessage={
+                    deletedProjects.length > 1
+                        ? 'Deleting projects...'
+                        : `Deleting project ${head(deletedProjects)?.name}`
+                }
+                agreeMessageVariant={'info'}
                 projects={deletedProject ? [deletedProject] : []}
                 handleAgree={() => {
+                    toggleAllRowsSelected(false);
                     setDeletedProject(null);
                     deleteProjects([deletedProject!]);
                 }}

@@ -5,7 +5,7 @@ import { formatByBytes } from '../../utils/helpers';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
 import { SliderColumnFilter } from './SliderFilter';
-import { createStyles } from '@material-ui/core';
+import { CircularProgressProps, createStyles, Theme } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Container from '@material-ui/core/Container';
@@ -15,6 +15,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { isDarwin } from '../../constants';
 import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { ProjectStatus } from '../../types/Project';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -37,6 +39,49 @@ const useStyles = makeStyles(() =>
         }
     })
 );
+
+// Inspired by the Facebook spinners.
+const useStylesFacebook = makeStyles((theme: Theme) =>
+    createStyles({
+        root: {
+            position: 'relative'
+        },
+        top: {
+            color: theme.palette.grey['200']
+        },
+        bottom: {
+            color: theme.palette.primary.main,
+            animationDuration: '550ms',
+            position: 'absolute',
+            left: 0
+        }
+    })
+);
+
+function BlueProgress(props: CircularProgressProps) {
+    const classes = useStylesFacebook();
+
+    return (
+        <div className={classes.root}>
+            <CircularProgress
+                variant="determinate"
+                value={100}
+                className={classes.top}
+                size={24}
+                thickness={4}
+                {...props}
+            />
+            <CircularProgress
+                variant="indeterminate"
+                disableShrink
+                className={classes.bottom}
+                size={24}
+                thickness={4}
+                {...props}
+            />
+        </div>
+    );
+}
 
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
@@ -171,7 +216,7 @@ export const extraColumns = ({
                 id: 'actions',
                 disableResizing: true,
                 Header: () => 'Actions',
-                Cell: ({ row }) => (
+                Cell: ({ row: { original } }) => (
                     <Container>
                         <Grid
                             container
@@ -179,17 +224,35 @@ export const extraColumns = ({
                             direction="row"
                             justify="flex-end"
                         >
-                            <Tooltip title="Delete" placement="top">
+                            <Tooltip
+                                title={
+                                    original.status === ProjectStatus.Active
+                                        ? 'Delete'
+                                        : ''
+                                }
+                                placement="top"
+                            >
                                 <span>
                                     <IconButton
                                         aria-label="delete"
+                                        disabled={
+                                            original.status ===
+                                            ProjectStatus.Deleting
+                                        }
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            onDeleteRow(row.original);
+                                            onDeleteRow(original);
                                         }}
                                     >
-                                        <DeleteIcon />
+                                        {original.status ===
+                                            ProjectStatus.Deleting && (
+                                            <BlueProgress />
+                                        )}
+                                        {original.status ===
+                                            ProjectStatus.Active && (
+                                            <DeleteIcon />
+                                        )}
                                     </IconButton>
                                 </span>
                             </Tooltip>
@@ -205,7 +268,7 @@ export const extraColumns = ({
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            shell.openItem(row.original.path);
+                                            shell.openItem(original.path);
                                         }}
                                     >
                                         <FolderOpenIcon />
