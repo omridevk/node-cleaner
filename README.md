@@ -6,6 +6,15 @@ Start the app in the `dev` environment. This starts the renderer process in [**h
 yarn dev
 ```
 
+#### Demo mode
+
+start the app in the development mode but all deletetion of directories will be mocked
+good for testing functionality without actually deleting files from the file system.
+
+```bash
+yarn dev-demo
+```
+
 ## Packaging for Production
 
 To package apps for the local platform:
