@@ -70,6 +70,8 @@ const createWindow = async () => {
         show: false,
         width: 1024,
         height: 728,
+        minWidth: 950,
+        minHeight: 300,
         icon: appIcon,
         webPreferences: { nodeIntegration: true }
     });
