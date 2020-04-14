@@ -25,6 +25,9 @@ import { ignoredFolders } from '../constants/ignoredFolders';
 import { ScanState } from '../hooks/useScan';
 import { ProjectStatus } from '../types/Project';
 import * as log from 'electron-log';
+import { unionWith } from 'ramda';
+import { eqBy } from 'ramda';
+import { prop } from 'ramda';
 const logger = log.scope('finder');
 
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
@@ -92,7 +95,9 @@ export class Finder {
     }
 
     updateProjects = (projects: ProjectData[]) => {
-        this._projects.next(projects);
+        this._projects.next(
+            unionWith(eqBy(prop('path')), projects, this._projects.getValue())
+        );
     };
 
     logExecutionTime = () => {
@@ -229,11 +234,8 @@ export class Finder {
                         )
                     )
                 ),
-                tap((project: any) => {
-                    this._projects.next([
-                        ...this._projects.getValue(),
-                        project
-                    ]);
+                tap((project: ProjectData) => {
+                    this.updateProjects([project]);
                 }),
                 take(1)
             )

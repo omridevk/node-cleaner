@@ -146,7 +146,7 @@ export const useScan = () => {
             status: status
         }));
         finder.current!.updateProjects(
-            unionWith(eqBy(prop('path')), updatedProjects, projects)
+            updatedProjects
         );
     }
     function resetScan() {
