@@ -9,11 +9,14 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, nativeTheme } from 'electron';
 import { productName } from '../package.json';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+import { Ipc } from './utils/ipc';
+import { Messages } from './enums/messages';
+import { first } from 'rxjs/operators';
 
 const appIcon =
     process.platform === 'darwin'
@@ -65,11 +68,11 @@ const createWindow = async () => {
     }
 
 
-
     mainWindow = new BrowserWindow({
         show: false,
         width: 1024,
         height: 728,
+        backgroundColor: '#2e2c29',
         minWidth: 950,
         minHeight: 300,
         icon: appIcon,
@@ -77,12 +80,21 @@ const createWindow = async () => {
     });
     mainWindow.loadURL(`file://${__dirname}/app.html`);
 
+    const ipc = new Ipc(mainWindow);
+    function updateMyAppTheme(darkMode: boolean) {
+        ipc.send(Messages.CHANGE_THEME, darkMode).pipe(first()).subscribe();
+    }
+    nativeTheme.on('updated', function theThemeHasChanged () {
+        updateMyAppTheme(nativeTheme.shouldUseDarkColors)
+    });
+
     // @TODO: Use 'ready-to-show' event
     //        https://github.com/electron/electron/blob/master/docs/api/browser-window.md#using-ready-to-show-event
     mainWindow.webContents.on('did-finish-load', () => {
         if (!mainWindow) {
             throw new Error('"mainWindow" is not defined');
         }
+        updateMyAppTheme(nativeTheme.shouldUseDarkColors);
         if (process.env.START_MINIMIZED) {
             mainWindow.minimize();
         } else {
