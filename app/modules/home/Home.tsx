@@ -9,6 +9,7 @@ import { FolderInput } from './FolderInput';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
 import { isDarwin, isWin } from '../../constants';
+import { isEmpty } from 'ramda';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -42,17 +43,25 @@ export default function Home({ drives }: Props) {
         title: 'All'
     });
     useEffect(() => {
-        setDirectories(
-            drives.filter(({ path }) => path !== '/').map(({ path }) => path)
-        );
-    }, [drives]);
+        const dirs = drives.filter(({ path }) => path !== '/').map(({ path }) => path);
+        if (isEmpty(dirs)) {
+            return;
+        }
+        setDirectories(dirs);
+    }, [drives, setDirectories]);
+    useEffect(() => {
+        if (!isDarwin || scan.type !== ScanType.All) {
+            return;
+        }
+        console.log('here');
+        setDirectories(['/']);
+    }, []);
     useEffect(() => {
         if (!isDarwin || scan.type !== ScanType.All) {
             return;
         }
         setDirectories(['/']);
-    }, [drives, scan]);
-
+    }, [scan, setDirectories]);
     const scans = useMemo(() => {
         return [
             {
@@ -74,9 +83,11 @@ export default function Home({ drives }: Props) {
     function handleScanChanged(scan: Scan) {
         setScan(scan);
     }
+
     function handleFolderChanged(folders: string[]) {
         setDirectories(folders);
     }
+
     function handleDriveChanged(drives: Drive[]) {
         setDirectories(drives.map(({ path }) => path));
         setSelectedDrives(drives);
@@ -114,11 +125,6 @@ export default function Home({ drives }: Props) {
                     />
                     {scan.type === ScanType.Folder && (
                         <FolderInput
-                            directories={
-                                isWin && directories.length === drives.length
-                                    ? []
-                                    : directories
-                            }
                             onChange={handleFolderChanged}
                         />
                     )}

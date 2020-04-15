@@ -1,37 +1,39 @@
-import TextField from '@material-ui/core/TextField';
-import React from 'react';
+import RemoveIcon from '@material-ui/icons/Remove';
+import React, { useEffect, useState } from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Button from '@material-ui/core/Button';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import FolderIcon from '@material-ui/icons/Folder';
 import { remote } from 'electron';
+
 const { dialog } = remote;
 import { createStyles } from '@material-ui/core';
-import { head, isEmpty } from 'ramda';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListSubheader from '@material-ui/core/ListSubheader';
 import Tooltip from '@material-ui/core/Tooltip';
+import IconButton from '@material-ui/core/IconButton';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles(() =>
     createStyles({
-        inputField: {
-            marginTop: '25px'
-            // display: "hidden"
-        },
         list: {
             maxHeight: '300px',
             overflow: 'auto'
         },
         changeFolderButton: {
             maxWidth: '200px',
+            background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
             margin: 'auto'
         },
         listenItemText: {
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis'
+        },
+        listItemIcon: {
+            margin: '0 25px'
         },
         container: {
             display: 'flex',
@@ -42,15 +44,17 @@ const useStyles = makeStyles(() =>
 
 interface Props {
     onChange: (folder: string[]) => void;
-    directories: string[];
-    placeholder?: string;
 }
+
 export const FolderInput: React.FC<Props> = ({
-    onChange,
-    directories = [],
-    placeholder = '/'
-}) => {
+                                                 onChange
+                                             }) => {
     const classes = useStyles();
+    const [selectedDirectories, setSelectedDirectories] = useState<string[]>([]);
+
+    useEffect(() => {
+        onChange([]);
+    }, []);
 
     function handleShowDialog() {
         dialog
@@ -59,13 +63,21 @@ export const FolderInput: React.FC<Props> = ({
                 message: 'Choose folder to scan'
             })
             .catch(e => console.error(e))
-            .then(({ filePaths }) => {
-                if (isEmpty(filePaths)) {
-                    onChange([placeholder]);
+            .then(result => {
+                if (!(result)) {
                     return;
                 }
-                onChange(filePaths);
+                setSelectedDirectories(result.filePaths);
+                onChange(result.filePaths);
             });
+    }
+
+    useEffect(() => {
+        onChange(selectedDirectories);
+    }, [selectedDirectories]);
+
+    function removeFolder(directory: string) {
+        setSelectedDirectories(folders => folders.filter((folder => folder !== directory)));
     }
 
     return (
@@ -76,40 +88,37 @@ export const FolderInput: React.FC<Props> = ({
                 onClick={handleShowDialog}
                 color="primary"
             >
-                {directories.length > 1 ? 'Change folders' : 'Choose folders'}
+                {selectedDirectories.length > 1 ? 'Change folders' : 'Choose folder/s'}
             </Button>
-            {directories.length > 1 && (
-                <List classes={{ root: classes.list }}>
-                    {directories.map(directory => (
-                        <ListItem key={directory}>
-                            <ListItemIcon>
-                                <FolderIcon />
+
+            <List classes={{ root: classes.list }}>
+                {selectedDirectories.map(directory => (
+                    <ListItem key={directory}>
+                        <ListItemAvatar classes={{ root: classes.listItemIcon }}>
+                            <Avatar>
+                                <FolderIcon/>
+
+                            </Avatar>
+                        </ListItemAvatar>
+                        <Tooltip title={directory}>
+                            <ListItemText
+                                classes={{
+                                    primary: classes.listenItemText
+                                }}
+                                primary={directory}
+                            />
+                        </Tooltip>
+                        <Tooltip title={'Remove'}>
+                            <ListItemIcon classes={{ root: classes.listItemIcon }}
+                                          onClick={() => removeFolder(directory)}>
+                                <IconButton>
+                                    <RemoveIcon/>
+                                </IconButton>
                             </ListItemIcon>
-                            <Tooltip title={directory}>
-                                <ListItemText
-                                    classes={{
-                                        primary: classes.listenItemText
-                                    }}
-                                    primary={directory}
-                                />
-                            </Tooltip>
-                        </ListItem>
-                    ))}
-                </List>
-            )}
-            {directories.length < 2 && (
-                <TextField
-                    classes={{
-                        root: classes.inputField
-                    }}
-                    onChange={event => onChange([event.target.value || ''])}
-                    value={head(directories)}
-                    placeholder={placeholder}
-                    id="outlined-basic"
-                    label="Base directory"
-                    variant="outlined"
-                />
-            )}
+                        </Tooltip>
+                    </ListItem>
+                ))}
+            </List>
         </div>
     );
 };

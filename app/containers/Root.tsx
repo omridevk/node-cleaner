@@ -6,9 +6,7 @@ import { ConnectedRouter } from 'connected-react-router';
 import { ProjectData } from '../types';
 import Routes from '../Routes';
 import {
-    createStyles,
     CssBaseline,
-    Theme,
     ThemeProvider
 } from '@material-ui/core';
 import { Drive } from '../utils/list-drives';
@@ -16,9 +14,6 @@ import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
 import { noop } from '../utils/helpers';
 import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
-import Backdrop from '@material-ui/core/Backdrop';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import { SnackbarProvider } from 'notistack';
 import { maximumSnackbars } from '../constants';
 
@@ -30,7 +25,9 @@ const defaultContext = {
     foldersScanned: 0,
     deletedProjects: [],
     resetScan: noop,
-    startScan: (_: any) => {},
+    startScan: (_: any) => {
+    },
+    totalSpace: { free: '', size: '' },
     pauseScan: noop,
     stopScan: noop,
     deleteProjects: noop,
@@ -43,6 +40,7 @@ export const ProjectDataContext = React.createContext<{
     projects?: ProjectData[];
     state: State;
     foldersScanned: number;
+    totalSpace: { free: string, size: string }
     toggleDarkMode: () => void;
     deletedProjects: ProjectData[];
     resetScan: () => void;
@@ -81,6 +79,7 @@ const Root = ({ store, history }: Props) => {
         pauseScan,
         stopScan,
         startScan,
+        totalSpace,
         resetScan,
         deleteProjects,
         foldersScanned,
@@ -95,10 +94,11 @@ const Root = ({ store, history }: Props) => {
             <ThemeProvider theme={darkMode ? darkTheme : theme}>
                 <SnackbarProvider maxSnack={maximumSnackbars}>
                     <>
-                        <CssBaseline />
+                        <CssBaseline/>
                         <ProjectDataContext.Provider
                             value={{
                                 drives,
+                                totalSpace,
                                 resetScan,
                                 foldersScanned,
                                 darkMode,
@@ -117,7 +117,7 @@ const Root = ({ store, history }: Props) => {
                         >
                             <Provider store={store}>
                                 <ConnectedRouter history={history}>
-                                    <Routes />
+                                    <Routes/>
                                 </ConnectedRouter>
                             </Provider>
                         </ProjectDataContext.Provider>

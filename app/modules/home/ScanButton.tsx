@@ -2,9 +2,19 @@ import { routes } from '../../constants';
 import { createStyles } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
-import React from 'react';
+import React, { useState } from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import MuiDialogTitle from '@material-ui/core/DialogTitle';
+import { isEmpty } from 'ramda';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import IconButton from '@material-ui/core/IconButton';
+import withStyles from '@material-ui/core/styles/withStyles';
+import CloseIcon from '@material-ui/icons/Close';
+import red from '@material-ui/core/colors/red';
+
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -44,43 +54,52 @@ interface Props {
     directories: string[];
     disabled: boolean;
 }
-//
-// export const ScanButton = ({ directories, disabled = false }: Props) => {
-//     const classes = useStyles();
-//     return (
-//         <Button disabled={disabled}>
-//             <Link
-//                 aria-disabled={disabled ? 'true' : 'false'}
-//                 to={{
-//                     pathname: routes.PROJECTS,
-//                     state: {
-//                         directories
-//                     }
-//                 }}
-//                 className={classes.link}
-//             >
-//                 <div className={classes.roundButton}>
-//                     <Fab
-//                         className={classes.extendedFab}
-//                         color="primary"
-//                         size="large"
-//                         aria-label="add"
-//                     >
-//                         <Typography className={classes.fabText} variant="h2">
-//                             Scan
-//                         </Typography>
-//                     </Fab>
-//                 </div>
-//             </Link>
-//         </Button>
-//     );
-// };
+
+const styles = (theme) => ({
+    root: {
+        margin: 0,
+        backgroundColor: red.A100,
+        color: theme.palette.common.white,
+        padding: theme.spacing(2)
+    },
+    closeButton: {
+        position: 'absolute',
+        right: theme.spacing(1),
+        top: theme.spacing(1),
+        color: theme.palette.common.white
+    }
+});
+
+const DialogTitle = withStyles(styles)((props) => {
+    const { children, classes, onClose, ...other } = props;
+    return (
+        <MuiDialogTitle disableTypography className={classes.root} {...other}>
+            <Typography variant="h6">{children}</Typography>
+            {onClose ? (
+                <IconButton aria-label="close" className={classes.closeButton} onClick={onClose}>
+                    <CloseIcon/>
+                </IconButton>
+            ) : null}
+        </MuiDialogTitle>
+    );
+});
 
 export const ScanButton = ({ directories, disabled = false }: Props) => {
     const classes = useStyles();
+    const [error, setError] = useState(false);
+
+    function handleClick(event) {
+        if (!isEmpty(directories)) {
+            return;
+        }
+        setError(true);
+        event.preventDefault();
+    }
+
     return (
         <div className={classes.container}>
             <Link
+                onClick={handleClick}
                 aria-disabled={disabled ? 'true' : 'false'}
                 to={{
                     pathname: routes.PROJECTS,
@@ -96,6 +115,14 @@ export const ScanButton = ({ directories, disabled = false }: Props) => {
                     </Typography>
                 </Button>
             </Link>
+            <Dialog open={error}>
+                <DialogTitle onClose={() => setError(false)}>Error</DialogTitle>
+                <DialogContent dividers={true}>
+                    <DialogContentText variant="body1">
+                        Please select at least one folder
+                    </DialogContentText>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
