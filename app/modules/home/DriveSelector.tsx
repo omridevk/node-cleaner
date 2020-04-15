@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormControl } from '@material-ui/core';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
@@ -9,23 +9,23 @@ import Input from '@material-ui/core/Input';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { Drive } from '../../utils/list-drives';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     formControl: {
         margin: theme.spacing(1),
         minWidth: 120,
-        maxWidth: 300
+        maxWidth: 300,
     },
     chips: {
         display: 'flex',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
     },
     chip: {
-        margin: 2
+        margin: 2,
     },
     noLabel: {
-        marginTop: theme.spacing(3)
+        marginTop: theme.spacing(3),
     },
-    labelId: {}
+    labelId: {},
 }));
 
 const ITEM_HEIGHT = 48;
@@ -34,22 +34,23 @@ const MenuProps = {
     PaperProps: {
         style: {
             maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-            width: 250
-        }
-    }
+            width: 250,
+        },
+    },
 };
 
 interface Props {
     drives: Drive[];
-    selectedDrives: Drive[];
     onChange: (drives: Drive[]) => void;
 }
-export const DriveSelector: React.FC<Props> = ({
-    drives,
-    onChange,
-    selectedDrives = []
-}) => {
+export const DriveSelector: React.FC<Props> = ({ drives, onChange }) => {
     const classes = useStyles();
+    const [selectedDrives, setSelectedDrives] = useState<Drive[]>([]);
+
+    useEffect(() => {
+        onChange(selectedDrives);
+    }, [selectedDrives]);
+
     return (
         <FormControl className={classes.formControl}>
             <InputLabel id={'drive-selector-label'}>Drives</InputLabel>
@@ -59,9 +60,11 @@ export const DriveSelector: React.FC<Props> = ({
                 multiple
                 value={selectedDrives}
                 // TODO FIX THIS SOMEHOW
-                onChange={event => onChange(event.target.value as Drive[])}
+                onChange={(event) =>
+                    setSelectedDrives(event.target.value as Drive[])
+                }
                 input={<Input />}
-                renderValue={selected => {
+                renderValue={(selected) => {
                     return (
                         <span>
                             {selected.map(({ name }) => name).join(', ')}
@@ -70,7 +73,7 @@ export const DriveSelector: React.FC<Props> = ({
                 }}
                 MenuProps={MenuProps}
             >
-                {drives.map(drive => (
+                {drives.map((drive) => (
                     <MenuItem key={drive.path} value={drive}>
                         <Checkbox checked={selectedDrives.includes(drive)} />
                         <ListItemText primary={drive.name} />

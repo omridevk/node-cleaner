@@ -37,7 +37,6 @@ interface Props {
 export default function Home({ drives }: Props) {
     const classes = useStyles();
     const [directories, setDirectories] = useState<string[]>([]);
-    const [selectedDrives, setSelectedDrives] = useState<Drive[]>([]);
     const [scan, setScan] = useState<Scan>({
         type: ScanType.All,
         title: 'All'
@@ -90,7 +89,6 @@ export default function Home({ drives }: Props) {
 
     function handleDriveChanged(drives: Drive[]) {
         setDirectories(drives.map(({ path }) => path));
-        setSelectedDrives(drives);
     }
 
     const shouldDisableScan =
@@ -114,6 +112,7 @@ export default function Home({ drives }: Props) {
                 alignItems="center"
             >
                 <ScanButton
+                    scanType={scan.type}
                     disabled={shouldDisableScan}
                     directories={directories}
                 />
@@ -131,7 +130,6 @@ export default function Home({ drives }: Props) {
                     {scan.type === ScanType.Drives && drives.length > 1 && (
                         <DriveSelector
                             drives={drives}
-                            selectedDrives={selectedDrives}
                             onChange={handleDriveChanged}
                         />
                     )}
