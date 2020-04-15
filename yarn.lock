@@ -1760,10 +1760,10 @@
     "@types/history" "*"
     "@types/react" "*"
 
-"@types/react-table@^7.0.15":
-  version "7.0.15"
-  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.0.15.tgz#240a8dc9376067b08179d4145517920fd29e3bd3"
-  integrity sha512-DXbBFE0aniirEDYFl0kJh7HGb7AGKyKlD3Z9y80fE/4CXsjVwJ254K643j0/3qaV2tz56oKmkjui1XL4S5Lubg==
+"@types/react-table@^7.0.16":
+  version "7.0.16"
+  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.0.16.tgz#3db6518fe07d79c58213e2b959983b353ba59457"
+  integrity sha512-SDFRUnWWN16rL/N1bpV4GKp4EAoulmrHbHoWCNUldrqVBYI9m9o+sYqNPP2E5NVUW7HQJf15rHKFN13F6v49Uw==
   dependencies:
     "@types/react" "*"
 
