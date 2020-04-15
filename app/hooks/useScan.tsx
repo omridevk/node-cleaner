@@ -108,7 +108,6 @@ export const useScan = () => {
                 setTotalSpace({ free: calculateFreeSpace(sizes), size: calculateSize(sizes) });
             });
     }, [folders.current]);
-    console.log(totalSpace);
 
     const totalSizeString = useCalculateSize(projects);
 
@@ -167,7 +166,7 @@ export const useScan = () => {
                 },
                 e => logger.error(e)
             );
-    }, [dispatch, updateProjectsStatus]);
+    }, [dispatch, updateProjectsStatus, setDeletedProjects]);
 
     const resetScan = useCallback(() => {
         finder.current?.destroy();
@@ -199,7 +198,7 @@ export const useScan = () => {
             dispatch({ type: Actions.FinishedScan })
         );
         return () => sub.unsubscribe();
-    }, [finder.current]);
+    }, [finder.current, dispatch]);
 
     useEffect(() => {
         const sub = finder.current?.foldersScanned$.subscribe(
@@ -229,7 +228,7 @@ export const useScan = () => {
         return () => sub?.unsubscribe();
     }, [finder.current]);
 
-    
+
     // finder clean up
     useEffect(() => {
         return () => finder.current?.destroy();
@@ -241,6 +240,7 @@ export const useScan = () => {
         deleteProjects,
         deletedProjects,
         totalSizeString,
+        totalSpace,
         foldersScanned,
         pauseScan,
         resumeScan,

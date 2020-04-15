@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { hot } from 'react-hot-loader/root';
 import { Provider } from 'react-redux';
 import { History } from 'history';
@@ -12,11 +12,10 @@ import {
 import { Drive } from '../utils/list-drives';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
-import { formatByBytes, noop } from '../utils/helpers';
+import { noop } from '../utils/helpers';
 import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
 import { SnackbarProvider } from 'notistack';
 import { maximumSnackbars } from '../constants';
-import checkDiskSpace from 'check-disk-space';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -28,6 +27,7 @@ const defaultContext = {
     resetScan: noop,
     startScan: (_: any) => {
     },
+    totalSpace: { free: '', size: '' },
     pauseScan: noop,
     stopScan: noop,
     deleteProjects: noop,
@@ -40,6 +40,7 @@ export const ProjectDataContext = React.createContext<{
     projects?: ProjectData[];
     state: State;
     foldersScanned: number;
+    totalSpace: { free: string, size: string }
     toggleDarkMode: () => void;
     deletedProjects: ProjectData[];
     resetScan: () => void;
@@ -78,6 +79,7 @@ const Root = ({ store, history }: Props) => {
         pauseScan,
         stopScan,
         startScan,
+        totalSpace,
         resetScan,
         deleteProjects,
         foldersScanned,
@@ -96,6 +98,7 @@ const Root = ({ store, history }: Props) => {
                         <ProjectDataContext.Provider
                             value={{
                                 drives,
+                                totalSpace,
                                 resetScan,
                                 foldersScanned,
                                 darkMode,

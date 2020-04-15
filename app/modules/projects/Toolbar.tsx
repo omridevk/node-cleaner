@@ -12,11 +12,14 @@ import ClearIcon from '@material-ui/icons/Clear';
 import SearchIcon from '@material-ui/icons/Search';
 import React, { useContext, useMemo } from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import { createStyles, lighten, Theme } from '@material-ui/core';
+import { createStyles, darken, emphasize, fade, lighten, Theme } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { ProjectDataContext } from '../../containers/Root';
 import { compose } from 'ramda';
+import withStyles from '@material-ui/core/styles/withStyles';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import useTheme from '@material-ui/core/styles/useTheme';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -57,7 +60,10 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
                     backgroundColor: theme.palette.secondary.dark
                 },
         title: {
-            flex: '1 1 40%'
+            flex: '1 1 25%'
+        },
+        middleTitle: {
+            flexBasis: '40%'
         }
     })
 );
@@ -101,19 +107,56 @@ interface HeaderProps {
     projects: ProjectData[],
     totalSizeString?: string
     totalSelectedSize?: string;
+    totalSpace: { free: string, size: string }
 }
 
-const Header = ({ numSelected, projects = [], totalSizeString = '', totalSelectedSize = '' }: HeaderProps) => {
-    const classes = useToolbarStyles();
+const InfoIcon = withStyles({
+    root: ({ theme, color }: { theme: Theme, color?: string }) => {
+        if (!color && theme.palette.type === 'dark') {
+            color = theme.palette.primary.light;
+        }
+        color = color ? color : theme.palette.primary.main;
+
+        return {
+            width: '14px',
+            height: '14px',
+            transform: 'translateY(2px)',
+            margin: '0 4px',
+            backgroundColor: color,
+            display: 'inline-block',
+            borderRadius: '30%'
+            // border: `1px solid ${emphasize(color, 0.5)}`
+        };
+    }
+})(({ classes }: { theme: Theme, color?: string, classes?: any }) => {
     return (
-        <Typography
-            className={classes.title}
-            color="inherit"
-            variant="subtitle1"
-        >
-            {numSelected ? `${numSelected}/${projects.length} selected, size: ${totalSelectedSize}` : ''}{' '}
-            {!numSelected ? `${projects.length} Projects found, total size: ${totalSizeString}` : ''}
-        </Typography>
+        <div className={classes.root}>
+        </div>
+    );
+});
+const Header = ({ numSelected, projects = [], totalSizeString = '', totalSelectedSize = '', totalSpace }: HeaderProps) => {
+    const classes = useToolbarStyles();
+    const theme = useTheme();
+    return (
+        <>
+            <Typography
+                className={classes.title}
+                color="inherit"
+                variant="subtitle1"
+            >
+                {numSelected ? `${numSelected}/${projects.length} selected, size: ${totalSelectedSize}` : ''}{' '}
+                {!numSelected ? `${projects.length} Projects found, total size: ${totalSizeString}` : ''}
+            </Typography>
+            <Typography
+                className={classes.middleTitle}
+                color="inherit"
+                variant="subtitle2"
+            >
+                <b>Machine Info: {'   '}</b>
+                <InfoIcon color={theme.palette.common.white} theme={theme}/> Capacity: {totalSpace.size} <InfoIcon
+                theme={theme}/> Free: {totalSpace.free}
+            </Typography>
+        </>
     );
 };
 
@@ -130,7 +173,7 @@ export const Toolbar = React.forwardRef(
         _
     ) => {
         const classes = useToolbarStyles();
-        const { totalSizeString, projects = [] } = useContext(
+        const { totalSizeString, projects = [], totalSpace } = useContext(
             ProjectDataContext
         );
         const numSelected = Object.keys(selectedRowIds).length;
@@ -149,7 +192,10 @@ export const Toolbar = React.forwardRef(
                     [classes.highlight]: numSelected > 0
                 })}
             >
-                <Header projects={projects} totalSelectedSize={totalSelectedSize} totalSizeString={totalSizeString}
+                <Header totalSpace={totalSpace}
+                        projects={projects}
+                        totalSelectedSize={totalSelectedSize}
+                        totalSizeString={totalSizeString}
                         numSelected={numSelected}/>
                 <SearchField
                     preGlobalFilteredRows={preGlobalFilteredRows}
