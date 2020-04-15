@@ -20,25 +20,25 @@ const useStyles = makeStyles(() =>
     createStyles({
         list: {
             maxHeight: '300px',
-            overflow: 'auto'
+            overflow: 'auto',
         },
         changeFolderButton: {
             maxWidth: '200px',
             background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-            margin: 'auto'
+            margin: 'auto',
         },
         listenItemText: {
             overflow: 'hidden',
             whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
         },
         listItemIcon: {
-            margin: '0 25px'
+            margin: '0 25px',
         },
         container: {
             display: 'flex',
-            flexDirection: 'column'
-        }
+            flexDirection: 'column',
+        },
     })
 );
 
@@ -46,11 +46,11 @@ interface Props {
     onChange: (folder: string[]) => void;
 }
 
-export const FolderInput: React.FC<Props> = ({
-                                                 onChange
-                                             }) => {
+export const FolderInput: React.FC<Props> = ({ onChange }) => {
     const classes = useStyles();
-    const [selectedDirectories, setSelectedDirectories] = useState<string[]>([]);
+    const [selectedDirectories, setSelectedDirectories] = useState<string[]>(
+        []
+    );
 
     useEffect(() => {
         onChange([]);
@@ -60,11 +60,11 @@ export const FolderInput: React.FC<Props> = ({
         dialog
             .showOpenDialog({
                 properties: ['openDirectory', 'multiSelections'],
-                message: 'Choose folder to scan'
+                message: 'Choose folder/s to scan',
             })
-            .catch(e => console.error(e))
-            .then(result => {
-                if (!(result)) {
+            .catch((e) => console.error(e))
+            .then((result) => {
+                if (!result) {
                     return;
                 }
                 setSelectedDirectories(result.filePaths);
@@ -77,9 +77,10 @@ export const FolderInput: React.FC<Props> = ({
     }, [selectedDirectories]);
 
     function removeFolder(directory: string) {
-        setSelectedDirectories(folders => folders.filter((folder => folder !== directory)));
+        setSelectedDirectories((folders) =>
+            folders.filter((folder) => folder !== directory)
+        );
     }
-
     return (
         <div className={classes.container}>
             <Button
@@ -88,31 +89,36 @@ export const FolderInput: React.FC<Props> = ({
                 onClick={handleShowDialog}
                 color="primary"
             >
-                {selectedDirectories.length > 1 ? 'Change folders' : 'Choose folder/s'}
+                {selectedDirectories.length > 0
+                    ? 'Change folders'
+                    : 'Choose folder/s'}
             </Button>
 
             <List classes={{ root: classes.list }}>
-                {selectedDirectories.map(directory => (
+                {selectedDirectories.map((directory) => (
                     <ListItem key={directory}>
-                        <ListItemAvatar classes={{ root: classes.listItemIcon }}>
+                        <ListItemAvatar
+                            classes={{ root: classes.listItemIcon }}
+                        >
                             <Avatar>
-                                <FolderIcon/>
-
+                                <FolderIcon />
                             </Avatar>
                         </ListItemAvatar>
                         <Tooltip title={directory}>
                             <ListItemText
                                 classes={{
-                                    primary: classes.listenItemText
+                                    primary: classes.listenItemText,
                                 }}
                                 primary={directory}
                             />
                         </Tooltip>
                         <Tooltip title={'Remove'}>
-                            <ListItemIcon classes={{ root: classes.listItemIcon }}
-                                          onClick={() => removeFolder(directory)}>
+                            <ListItemIcon
+                                classes={{ root: classes.listItemIcon }}
+                                onClick={() => removeFolder(directory)}
+                            >
                                 <IconButton>
-                                    <RemoveIcon/>
+                                    <RemoveIcon />
                                 </IconButton>
                             </ListItemIcon>
                         </Tooltip>

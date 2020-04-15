@@ -4,11 +4,16 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import FormControl from '@material-ui/core/FormControl';
+import FormLabel from '@material-ui/core/FormLabel';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Radio from '@material-ui/core/Radio';
 
 export enum ScanType {
     All = 'all',
     Folder = 'folder',
-    Drives = 'drives'
+    Drives = 'drives',
 }
 
 export interface Scan {
@@ -20,77 +25,66 @@ export interface Scan {
 
 interface Props {
     scans: Scan[];
-    title: string;
+    selectedScan: Scan;
     onChangeScan: (scan: Scan) => void;
 }
+
 const useStyles = makeStyles(() =>
     createStyles({
+        root: {
+            padding: '10px',
+            flexDirection: 'row',
+        },
+        formLabel: {
+            alignSelf: 'center',
+        },
         menuListRoot: {
-            outline: 0
+            outline: 0,
         },
         container: {
-            padding: '10px'
-        }
+            padding: '10px',
+        },
     })
 );
 
 export const ScanSelection: React.FC<Props> = ({
     scans,
+    selectedScan,
     onChangeScan,
-    title
 }) => {
-    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
-        null
-    );
     const classes = useStyles();
-    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+    function handleChange(event) {
+        const scan = scans.find((scan) => scan.type === event.target.value);
+        if (!scan) {
+            return;
+        }
+        onChangeScan(scan);
+    }
 
     return (
-        <div className={classes.container}>
-            <Button
-                variant="contained"
-                color="primary"
-                aria-controls="Scan Type"
-                aria-haspopup="true"
-                onClick={handleClick}
+        <FormControl classes={{ root: classes.root }}>
+            <FormLabel classes={{ root: classes.formLabel }} component="legend">
+                Scan Type:
+            </FormLabel>
+            <RadioGroup
+                classes={{ root: classes.root }}
+                aria-label="Scan Select"
+                name="scan-select"
+                value={selectedScan.type}
+                onChange={handleChange}
             >
-                {title}
-            </Button>
-            <Menu
-                id="simple-menu"
-                anchorEl={anchorEl}
-                keepMounted
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-            >
-                <MenuList classes={{ root: classes.menuListRoot }}>
-                    {scans.map(
-                        ({ title, disabled = false, type, visible = true }) => {
-                            if (!visible) {
-                                return null;
-                            }
-                            return (
-                                <MenuItem
-                                    disabled={disabled}
-                                    key={title}
-                                    onClick={() => {
-                                        handleClose();
-                                        onChangeScan({ title, disabled, type });
-                                    }}
-                                >
-                                    {title}
-                                </MenuItem>
-                            );
-                        }
-                    )}
-                </MenuList>
-            </Menu>
-        </div>
+                {scans.map(({ type, title, disabled, visible = true }) =>
+                    visible ? (
+                        <FormControlLabel
+                            key={type}
+                            value={type}
+                            control={<Radio />}
+                            label={title}
+                            disabled={disabled}
+                        />
+                    ) : null
+                )}
+            </RadioGroup>
+        </FormControl>
     );
 };

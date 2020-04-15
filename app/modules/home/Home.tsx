@@ -23,7 +23,8 @@ const useStyles = makeStyles(() =>
         settingsContainer: {
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            minHeight: "135px"
         }
     })
 );
@@ -52,7 +53,6 @@ export default function Home({ drives }: Props) {
         if (!isDarwin || scan.type !== ScanType.All) {
             return;
         }
-        console.log('here');
         setDirectories(['/']);
     }, []);
     useEffect(() => {
@@ -118,9 +118,9 @@ export default function Home({ drives }: Props) {
                 />
                 <div className={classes.settingsContainer}>
                     <ScanSelection
+                        selectedScan={scan}
                         onChangeScan={handleScanChanged}
                         scans={scans}
-                        title={scan.title}
                     />
                     {scan.type === ScanType.Folder && (
                         <FolderInput
