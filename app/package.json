@@ -1,20 +1,21 @@
 {
-  "name": "node-cleaner",
-  "productName": "Node Cleaner",
-  "version": "0.0.2",
-  "description": "Application to clean unused node_modules folders to free up space.",
-  "main": "./main.prod.js",
-  "author": {
-    "name": "Omri Katz",
-    "email": "omrikatz12@gmail.com",
-    "url": "https://github.com/omridevk"
-  },
-  "scripts": {
-    "electron-rebuild": "node -r ../internals/scripts/BabelRegister.js ../internals/scripts/ElectronRebuild.js",
-    "postinstall": "yarn electron-rebuild"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "drivelist": "^8.0.10"
-  }
+    "name": "node-cleaner",
+    "productName": "Node Cleaner",
+    "version": "0.0.2",
+    "description": "Application to clean unused node_modules folders to free up space.",
+    "main": "./main.prod.js",
+    "author": {
+        "name": "Omri Katz",
+        "email": "omrikatz12@gmail.com",
+        "url": "https://github.com/omridevk"
+    },
+    "scripts": {
+        "electron-rebuild": "node -r ../internals/scripts/BabelRegister.js ../internals/scripts/ElectronRebuild.js",
+        "postinstall": "yarn electron-rebuild"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "drivelist": "^8.0.10",
+        "check-disk-space": "^2.1.0"
+    }
 }
