@@ -11,11 +11,17 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable
+    useTable,
 } from 'react-table';
 import { ProjectData } from '../../types';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { DefaultColumnFilter, extraColumns, useExtraColumns } from './columns';
+import React, {
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -24,27 +30,63 @@ import { ProjectDataContext } from '../../containers/Root';
 import { ContextMenuState } from '../../types/ContextMenuState';
 import { Popups } from './Popups';
 import { TableHead } from './TableHead';
+import { Header } from './Header';
+import { ScanState } from '../../hooks/useScan';
+import { useHistory } from 'react-router';
 
 function fuzzyTextFilterFn(
     rows: Row<ProjectData>[],
     id: IdType<any>,
     filterValue: FilterValue
 ) {
-    return matchSorter(rows, filterValue, { keys: [row => row.values[id]] });
+    return matchSorter(rows, filterValue, { keys: [(row) => row.values[id]] });
 }
 
 interface TableProps {
     columns: Array<Column<ProjectData>>;
     onDeleteRow: (project: ProjectData) => void;
-    onDeleteSelected: (projects: ProjectData[]) => void;
+    onDeleteProjects: (projects: ProjectData[]) => void;
 }
-export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
-    const { projects = [], deletedProjects } = useContext(ProjectDataContext);
+export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
+    const {
+        projects = [],
+        deletedProjects,
+        foldersScanned,
+        stopScan,
+        state: { scanning },
+        toggleDarkMode,
+        pauseScan,
+        resetScan,
+        resumeScan,
+        darkMode,
+    } = useContext(ProjectDataContext);
+
+    const loading = scanning === ScanState.Loading;
+    const history = useHistory();
+
+    function cancelScan() {
+        stopScan();
+        history.push('/home');
+    }
+    function deleteAll() {
+        if (!projects?.length) {
+            return;
+        }
+        onDeleteProjects(projects);
+    }
+
+    const toggleScan = useCallback(() => {
+        if (loading) {
+            pauseScan();
+            return;
+        }
+        resumeScan();
+    }, [loading, pauseScan, resetScan]);
 
     const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
         project: null,
         mouseX: null,
-        mouseY: null
+        mouseY: null,
     });
     const filterTypes = React.useMemo(
         () => ({
@@ -57,7 +99,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                 id: IdType<string>,
                 filterValue: FilterValue
             ) => {
-                return rows.filter(row => {
+                return rows.filter((row) => {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
@@ -65,7 +107,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
                               .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
-            }
+            },
         }),
         []
     );
@@ -75,7 +117,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             width: 150,
             minWidth: 150,
             Filter: DefaultColumnFilter,
-            maxWidth: 400
+            maxWidth: 400,
         }),
         []
     );
@@ -83,8 +125,8 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         () => [
             {
                 id: 'size',
-                desc: true
-            }
+                desc: true,
+            },
         ],
         []
     );
@@ -100,7 +142,7 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         prepareRow,
         toggleRowSelected,
         selectedFlatRows,
-        state: { selectedRowIds, globalFilter }
+        state: { selectedRowIds, globalFilter },
     } = useTable(
         {
             autoResetSelectedRows: false,
@@ -110,11 +152,11 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
             columns,
             filterTypes,
             initialState: {
-                sortBy: defaultSortBy
+                sortBy: defaultSortBy,
             },
-            getRowId: React.useCallback(row => row.path, []),
+            getRowId: React.useCallback((row) => row.path, []),
             defaultColumn,
-            data: projects
+            data: projects,
         },
         useFilters,
         useGlobalFilter,
@@ -132,17 +174,33 @@ export function Table({ columns, onDeleteRow, onDeleteSelected }: TableProps) {
         }
     }, [deletedProjects]);
 
+    const onResetScan = useCallback(() => {
+        toggleAllRowsSelected(false);
+        resetScan();
+    }, [resetScan, toggleAllRowsSelected]);
+
     // Render the UI for your table
     return (
         <>
+            <Header
+                foldersScanned={foldersScanned}
+                resetScan={onResetScan}
+                onDeleteAll={deleteAll}
+                projects={projects!}
+                toggleScanState={toggleScan}
+                onCancelScan={cancelScan}
+                darkMode={darkMode}
+                toggleDarkMode={toggleDarkMode}
+                title={'Node Cleaner'}
+                state={scanning}
+            />
             <Toolbar
-                toggleAllRowsSelected={toggleAllRowsSelected}
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 selectedFlatRows={selectedFlatRows}
                 selectedRowIds={selectedRowIds}
-                onDeleteSelected={onDeleteSelected}
+                onDeleteSelected={onDeleteProjects}
             />
             <MaUTable component="div" {...getTableProps()}>
                 <TableHead headerGroups={headerGroups} />

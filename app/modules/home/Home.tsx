@@ -40,10 +40,10 @@ export default function Home({ drives }: Props) {
     const [directories, setDirectories] = useState<string[]>([]);
     const [scan, setScan] = useState<Scan>({
         type: ScanType.All,
-        title: 'All'
+        title: 'All',
     });
     useEffect(() => {
-        const dirs = drives.filter(({ path }) => path !== '/').map(({ path }) => path);
+        const dirs = drives.map(({ path }) => path);
         if (isEmpty(dirs)) {
             return;
         }
@@ -59,23 +59,23 @@ export default function Home({ drives }: Props) {
         if (!isDarwin || scan.type !== ScanType.All) {
             return;
         }
-        setDirectories(['/']);
-    }, [scan, setDirectories]);
+        setDirectories(drives.map(({ path }) => path));
+    }, [scan, setDirectories, drives]);
     const scans = useMemo(() => {
         return [
             {
                 type: ScanType.All,
-                title: 'All'
+                title: 'All',
             },
             {
                 type: ScanType.Folder,
-                title: 'Folder'
+                title: 'Folder',
             },
             {
                 type: ScanType.Drives,
                 title: 'Drives',
-                visible: drives.length > 1
-            }
+                visible: drives.length > 1,
+            },
         ];
     }, [drives]);
 
@@ -99,12 +99,12 @@ export default function Home({ drives }: Props) {
             maxWidth={false}
             disableGutters
             classes={{
-                root: classes.containerRoot
+                root: classes.containerRoot,
             }}
         >
             <Grid
                 classes={{
-                    root: classes.gridRoot
+                    root: classes.gridRoot,
                 }}
                 container
                 direction="column"
@@ -123,9 +123,7 @@ export default function Home({ drives }: Props) {
                         scans={scans}
                     />
                     {scan.type === ScanType.Folder && (
-                        <FolderInput
-                            onChange={handleFolderChanged}
-                        />
+                        <FolderInput onChange={handleFolderChanged} />
                     )}
                     {scan.type === ScanType.Drives && drives.length > 1 && (
                         <DriveSelector

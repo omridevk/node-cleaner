@@ -16,13 +16,17 @@ import prop from 'ramda/src/prop';
 import { ProjectStatus } from '../../types/Project';
 import { useSnackbar } from 'notistack';
 import { head } from 'ramda';
+import { clipboard } from 'electron';
 
 interface Props {
     contextMenuState: ContextMenuState;
     toggleAllRowsSelected: (value?: boolean) => void;
 }
 
-export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelected }) => {
+export const Popups: React.FC<Props> = ({
+    contextMenuState,
+    toggleAllRowsSelected,
+}) => {
     const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
     useEffect(() => {
         if (!deletedProjects.length) {
@@ -41,13 +45,13 @@ export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelecte
         if (deletedProjects.length > maximumSnackbars) {
             return;
         }
-        deletedProjects.forEach(project =>
+        deletedProjects.forEach((project) =>
             enqueueSnackbar(
                 `successfully deleted ${
                     project.name
                 } (freed space: ${formatByBytes(project.size)})`,
                 {
-                    variant: 'success'
+                    variant: 'success',
                 }
             )
         );
@@ -73,8 +77,18 @@ export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelecte
         const menu = [
             {
                 text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
-                action: handleOpenPath
-            }
+                action: handleOpenPath,
+            },
+            {
+                text: 'Copy path to clipboard',
+                action: () => {
+                    const { project } = contextMenuState;
+                    if (!project) {
+                        return;
+                    }
+                    clipboard.writeText(project.path);
+                },
+            },
         ];
         if (project?.status === ProjectStatus.Deleting) {
             return menu;
@@ -83,8 +97,8 @@ export const Popups: React.FC<Props> = ({ contextMenuState, toggleAllRowsSelecte
             ...menu,
             {
                 text: 'Delete',
-                action: handleDeleteProject
-            }
+                action: handleDeleteProject,
+            },
         ];
     }, [contextMenuState]);
     const message =

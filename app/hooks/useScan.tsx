@@ -13,17 +13,18 @@ import * as logger from 'electron-log';
 import { formatByBytes, sumBy } from '../utils/helpers';
 import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
 import { compose, uniq } from 'ramda';
+import { exec } from '../utils/exec';
 
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
-    Idle = 'idle'
+    Idle = 'idle',
 }
 
 export enum DeleteState {
     Deleting = 'deleting',
     Idle = 'idle',
-    Finished = 'finished'
+    Finished = 'finished',
 }
 
 export interface State {
@@ -37,7 +38,7 @@ enum Actions {
     FinishedScan,
     Reset,
     DeleteProjects,
-    FinishedDelete
+    FinishedDelete,
 }
 
 function reducer(state: State, action: any): State {
@@ -45,32 +46,32 @@ function reducer(state: State, action: any): State {
         case Actions.Reset:
             return {
                 scanning: ScanState.Idle,
-                deleting: DeleteState.Idle
+                deleting: DeleteState.Idle,
             };
         case Actions.StartScan:
             return {
                 ...state,
-                scanning: ScanState.Loading
+                scanning: ScanState.Loading,
             };
         case Actions.PauseScan:
             return {
                 ...state,
-                scanning: ScanState.Idle
+                scanning: ScanState.Idle,
             };
         case Actions.FinishedScan:
             return {
                 ...state,
-                scanning: ScanState.Finished
+                scanning: ScanState.Finished,
             };
         case Actions.DeleteProjects:
             return {
                 ...state,
-                deleting: DeleteState.Deleting
+                deleting: DeleteState.Deleting,
             };
         case Actions.FinishedDelete:
             return {
                 ...state,
-                deleting: DeleteState.Finished
+                deleting: DeleteState.Finished,
             };
         default:
             throw new Error();

@@ -8,7 +8,6 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { ProjectData } from '../../types';
 import { head, isEmpty } from 'ramda';
 import { useSnackbar, VariantType } from 'notistack';
-import { formatByBytes } from '../../utils/helpers';
 import { useCalculateSize } from '../../hooks/useCalculateSize';
 import { Typography } from '@material-ui/core';
 
