@@ -6,19 +6,18 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import FolderIcon from '@material-ui/icons/Folder';
 import { remote } from 'electron';
+
 const { dialog } = remote;
 import { createStyles } from '@material-ui/core';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles(() =>
     createStyles({
-        inputField: {
-            marginTop: '25px'
-            // display: "hidden"
-        },
         list: {
             maxHeight: '300px',
             overflow: 'auto'
@@ -34,7 +33,7 @@ const useStyles = makeStyles(() =>
             textOverflow: 'ellipsis'
         },
         listItemIcon: {
-            marginLeft: '25px'
+            margin: '0 25px'
         },
         container: {
             display: 'flex',
@@ -95,9 +94,12 @@ export const FolderInput: React.FC<Props> = ({
             <List classes={{ root: classes.list }}>
                 {selectedDirectories.map(directory => (
                     <ListItem key={directory}>
-                        <ListItemIcon classes={{ root: classes.listItemIcon }}>
-                            <FolderIcon/>
-                        </ListItemIcon>
+                        <ListItemAvatar classes={{ root: classes.listItemIcon }}>
+                            <Avatar>
+                                <FolderIcon/>
+
+                            </Avatar>
+                        </ListItemAvatar>
                         <Tooltip title={directory}>
                             <ListItemText
                                 classes={{
