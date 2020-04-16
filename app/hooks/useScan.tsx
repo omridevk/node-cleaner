@@ -1,20 +1,30 @@
 import { Finder } from '../utils/finder';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+} from 'react';
 import { ProjectData } from '../types';
 import { catchError, delay, first, map, tap } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
 import path from 'path';
-import { EMPTY, forkJoin, from } from 'rxjs';
+import { bindCallback, bindNodeCallback, EMPTY, forkJoin, from } from 'rxjs';
 import chalk from 'chalk';
 import { ProjectStatus } from '../types/Project';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { useCalculateSize } from './useCalculateSize';
 import * as logger from 'electron-log';
 import { formatByBytes, sumBy } from '../utils/helpers';
 import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
 import { compose, uniq } from 'ramda';
-import { exec } from '../utils/exec';
+import rimraf from 'rimraf';
+import { exec } from 'child_process';
+import { isDarwin, isLinux, isWin } from '../constants';
 
+const rimraf$ = bindCallback(rimraf);
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
@@ -93,81 +103,119 @@ export const useScan = () => {
     const [drives, setDrives] = useState<Drive[]>([]);
     const [state, dispatch] = useReducer(reducer, {
         scanning: ScanState.Idle,
-        deleting: DeleteState.Idle
+        deleting: DeleteState.Idle,
     });
 
     useEffect(() => {
         if (!folders.current) {
             return;
         }
-        let dirs = Array.isArray(folders.current) ? folders.current : [folders.current];
-        dirs = uniq(dirs.map(dir => path.parse(dir).root));
+        let dirs = Array.isArray(folders.current)
+            ? folders.current
+            : [folders.current];
+        dirs = uniq(dirs.map((dir) => path.parse(dir).root));
         const calculateFreeSpace = compose(formatByBytes, sumBy('free'));
         const calculateSize = compose(formatByBytes, sumBy('size'));
-        Promise.all(dirs.map(dir => checkDiskSpace(dir)))
-            .then((sizes: CheckDiskSpaceResult[]) => {
-                setTotalSpace({ free: calculateFreeSpace(sizes), size: calculateSize(sizes) });
-            });
+        Promise.all(dirs.map((dir) => checkDiskSpace(dir))).then(
+            (sizes: CheckDiskSpaceResult[]) => {
+                setTotalSpace({
+                    free: calculateFreeSpace(sizes),
+                    size: calculateSize(sizes),
+                });
+            }
+        );
     }, [folders.current]);
 
     const totalSizeString = useCalculateSize(projects);
 
-    const startScan = useCallback((dir: string | string[]) => {
-        finder.current!.start(dir);
-        folders.current = dir;
-        dispatch({ type: Actions.StartScan });
-    }, [finder.current, dispatch]);
+    const startScan = useCallback(
+        (dir: string | string[]) => {
+            finder.current!.start(dir);
+            folders.current = dir;
+            dispatch({ type: Actions.StartScan });
+        },
+        [finder.current, dispatch]
+    );
 
+    const updateProjectsStatus = useCallback(
+        ({
+            updatedProjects,
+            status,
+        }: {
+            updatedProjects: ProjectData[];
+            status: ProjectStatus;
+        }) => {
+            updatedProjects = updatedProjects.map((project) => ({
+                ...project,
+                status: status,
+            }));
+            finder.current!.updateProjects(updatedProjects);
+        },
+        [finder.current]
+    );
 
-    const updateProjectsStatus = useCallback(({ updatedProjects, status }: { updatedProjects: ProjectData[], status: ProjectStatus }) => {
-        updatedProjects = updatedProjects.map(project => ({
-            ...project,
-            status: status
-        }));
-        finder.current!.updateProjects(
-            updatedProjects
-        );
-    }, [finder.current]);
-
-    const deleteProjects = useCallback((deletedProjects: ProjectData[]) => {
-        dispatch({ type: Actions.DeleteProjects });
-        updateProjectsStatus({ updatedProjects: deletedProjects, status: ProjectStatus.Deleting });
-        const paths = deletedProjects.map(
-            project => `${path.join(project.path, 'node_modules')}`
-        );
-
-        logger.info(
-            chalk.yellowBright(
-                `removing projects ${chalk.redBright(
-                    deletedProjects.map(project => project.name).join(' , ')
-                )}`
-            )
-        );
-        forkJoin(
-            demoMode
-                ? from([0]).pipe(delay(5000))
-                : paths.map(path =>
-                    from(fs.remove(path)).pipe(
-                        catchError(e => {
-                            console.error(e);
-                            return EMPTY;
-                        })
-                    )
-                )
-        )
-            .pipe(first())
-            .subscribe(
-                () => {
-                    setDeletedProjects(deletedProjects);
-                    updateProjectsStatus({
-                        updatedProjects: deletedProjects,
-                        status: ProjectStatus.Deleted
-                    });
-                    dispatch({ type: Actions.FinishedDelete });
-                },
-                e => logger.error(e)
+    const deleteProjects = useCallback(
+        (deletedProjects: ProjectData[]) => {
+            dispatch({ type: Actions.DeleteProjects });
+            updateProjectsStatus({
+                updatedProjects: deletedProjects,
+                status: ProjectStatus.Deleting,
+            });
+            const paths = deletedProjects.map(
+                (project) => `${path.join(project.path, 'node_modules')}`
             );
-    }, [dispatch, updateProjectsStatus, setDeletedProjects]);
+
+            logger.info(
+                chalk.yellowBright(
+                    `removing projects ${chalk.redBright(
+                        deletedProjects
+                            .map((project) => project.name)
+                            .join(' , ')
+                    )}`
+                )
+            );
+
+            const command = useMemo(() => {
+                if (isWin) {
+                    return 'deltree';
+                }
+                return 'rm -rf';
+            }, []);
+
+            forkJoin(
+                demoMode
+                    ? from([0]).pipe(delay(5000))
+                    : paths.map(
+                          (path) => bindNodeCallback(exec)(`${command} "${path}"`)
+                          // rimraf$(`${path}`).pipe(
+                          //     catchError((e) => {
+                          //         console.error(e);
+                          //         return EMPTY;
+                          //     })
+                          // )
+                      )
+            )
+                .pipe(
+                    catchError((e) => {
+                        console.error(e);
+                        return EMPTY;
+                    }),
+                    first()
+                )
+                .subscribe(
+                    () => {
+                        setDeletedProjects(deletedProjects);
+                        updateProjectsStatus({
+                            updatedProjects: deletedProjects,
+                            status: ProjectStatus.Deleted,
+                        });
+                        dispatch({ type: Actions.FinishedDelete });
+                    },
+                    (e) => logger.error(e)
+                );
+        },
+        [dispatch, updateProjectsStatus, setDeletedProjects]
+    );
 
     const resetScan = useCallback(() => {
         finder.current?.destroy();
@@ -193,7 +241,6 @@ export const useScan = () => {
         finder.current?.resume();
     }, [finder.current, dispatch]);
 
-
     useEffect(() => {
         const sub = finder.current!.onScanEnd.subscribe(() =>
             dispatch({ type: Actions.FinishedScan })
@@ -202,8 +249,8 @@ export const useScan = () => {
     }, [finder.current, dispatch]);
 
     useEffect(() => {
-        const sub = finder.current?.foldersScanned$.subscribe(
-            number => setFoldersScanned(number)
+        const sub = finder.current?.foldersScanned$.subscribe((number) =>
+            setFoldersScanned(number)
         );
         return () => sub?.unsubscribe();
     }, [finder.current]);
@@ -211,24 +258,23 @@ export const useScan = () => {
     useEffect(() => {
         const sub = finder.current
             ?.scanDrives()
-            .subscribe(drives => setDrives(drives));
+            .subscribe((drives) => setDrives(drives));
         return () => sub?.unsubscribe();
     }, [finder.current]);
 
     useEffect(() => {
         const sub = finder.current?.projects$
             .pipe(
-                map(projects =>
+                map((projects) =>
                     projects.filter(
-                        project => project.status !== ProjectStatus.Deleted
+                        (project) => project.status !== ProjectStatus.Deleted
                     )
                 ),
-                tap(projects => setProjects(projects))
+                tap((projects) => setProjects(projects))
             )
             .subscribe();
         return () => sub?.unsubscribe();
     }, [finder.current]);
-
 
     // finder clean up
     useEffect(() => {
@@ -248,6 +294,6 @@ export const useScan = () => {
         resetScan,
         stopScan,
         state,
-        drives
+        drives,
     };
 };
