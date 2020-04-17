@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FilterValue, Hooks, IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
 import { SliderColumnFilter } from './SliderFilter';
-import { createStyles } from '@material-ui/core';
+import { CircularProgressProps, createStyles, Theme } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Container from '@material-ui/core/Container';
@@ -15,6 +15,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { isDarwin } from '../../constants';
 import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { ProjectStatus } from '../../types/Project';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -38,6 +40,49 @@ const useStyles = makeStyles(() =>
     })
 );
 
+// Inspired by the Facebook spinners.
+const useStylesFacebook = makeStyles((theme: Theme) =>
+    createStyles({
+        root: {
+            position: 'relative'
+        },
+        top: {
+            color: theme.palette.grey['200']
+        },
+        bottom: {
+            color: theme.palette.primary.main,
+            animationDuration: '550ms',
+            position: 'absolute',
+            left: 0
+        }
+    })
+);
+
+function BlueProgress(props: CircularProgressProps) {
+    const classes = useStylesFacebook();
+
+    return (
+        <div className={classes.root}>
+            <CircularProgress
+                variant="determinate"
+                value={100}
+                className={classes.top}
+                size={24}
+                thickness={4}
+                {...props}
+            />
+            <CircularProgress
+                variant="indeterminate"
+                disableShrink
+                className={classes.bottom}
+                size={24}
+                thickness={4}
+                {...props}
+            />
+        </div>
+    );
+}
+
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
 // will be automatically removed. Normally this is just an undefined
@@ -49,89 +94,84 @@ export const DefaultColumnFilter = () => {
     return null;
 };
 
-export const defaultColumns = () =>
-    useMemo(
-        () => [
-            {
-                Header: 'Name',
-                accessor: 'name',
-                defaultCanFilter: true,
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { name }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip
-                            title={name || ''}
-                            aria-label={name || ''}
-                            placement="top"
-                        >
-                            <div className={classes.cellText}>{name}</div>
-                        </Tooltip>
-                    );
-                }
-            },
-            {
-                Header: 'Size',
-                accessor: 'size',
-                sortInverted: true,
-                Filter: SliderColumnFilter,
-                filter: filterGreaterThan,
-                Cell: ({ row }: { row: Row<ProjectData> }) => (
-                    <div>{formatByBytes(row.original.size)}</div>
-                ),
-                disableResizing: true
-            },
-            {
-                Header: 'Last modified',
-                accessor: 'lastModified',
-                defaultCanFilter: false,
-                sortType: 'datetime',
-                Cell: ({ row }: { row: Row<ProjectData> }) => (
-                    <div>{moment(row.original.lastModified).fromNow()}</div>
-                ),
-                disableResizing: true
-            },
-            {
-                Header: 'Description',
-                accessor: 'description',
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { description }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip
-                            title={description || ''}
-                            aria-label={description || ''}
-                            placement="top"
-                        >
-                            <div className={classes.cellText}>
-                                {description}
-                            </div>
-                        </Tooltip>
-                    );
-                }
-            },
-            {
-                Header: 'Full Path',
-                accessor: 'path',
-                Cell: ({ row }: { row: Row<ProjectData> }) => {
-                    const {
-                        original: { path }
-                    } = row;
-                    const classes = useStyles();
-                    return (
-                        <Tooltip title={path} aria-label={path} placement="top">
-                            <div className={classes.cellText}>{path}</div>
-                        </Tooltip>
-                    );
-                }
-            }
-        ],
-        []
-    );
+export const defaultColumns = [
+    {
+        Header: 'Name',
+        accessor: 'name',
+        defaultCanFilter: true,
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { name }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip
+                    title={name || ''}
+                    aria-label={name || ''}
+                    placement="top"
+                >
+                    <div className={classes.cellText}>{name}</div>
+                </Tooltip>
+            );
+        }
+    },
+    {
+        Header: 'Size',
+        accessor: 'size',
+        sortInverted: true,
+        Filter: SliderColumnFilter,
+        filter: filterGreaterThan,
+        Cell: ({ row }: { row: Row<ProjectData> }) => (
+            <div>{formatByBytes(row.original.size)}</div>
+        ),
+        disableResizing: true
+    },
+    {
+        Header: 'Last modified',
+        accessor: 'lastModified',
+        defaultCanFilter: false,
+        sortType: 'datetime',
+        Cell: ({ row }: { row: Row<ProjectData> }) => (
+            <div>{moment(row.original.lastModified).fromNow()}</div>
+        ),
+        disableResizing: true
+    },
+    {
+        Header: 'Description',
+        accessor: 'description',
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { description }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip
+                    title={description || ''}
+                    aria-label={description || ''}
+                    placement="top"
+                >
+                    <div className={classes.cellText}>{description}</div>
+                </Tooltip>
+            );
+        }
+    },
+    {
+        Header: 'Full Path',
+        accessor: 'path',
+        Cell: ({ row }: { row: Row<ProjectData> }) => {
+            const {
+                original: { path }
+            } = row;
+            const classes = useStyles();
+            return (
+                <Tooltip title={path} aria-label={path} placement="top">
+                    <div className={classes.cellText}>{path}</div>
+                </Tooltip>
+            );
+        }
+    }
+];
+
 
 export const extraColumns = ({
     onDeleteRow,
@@ -171,7 +211,7 @@ export const extraColumns = ({
                 id: 'actions',
                 disableResizing: true,
                 Header: () => 'Actions',
-                Cell: ({ row }) => (
+                Cell: ({ row: { original } }) => (
                     <Container>
                         <Grid
                             container
@@ -179,17 +219,35 @@ export const extraColumns = ({
                             direction="row"
                             justify="flex-end"
                         >
-                            <Tooltip title="Delete" placement="top">
+                            <Tooltip
+                                title={
+                                    original.status === ProjectStatus.Active
+                                        ? 'Delete'
+                                        : ''
+                                }
+                                placement="top"
+                            >
                                 <span>
                                     <IconButton
                                         aria-label="delete"
+                                        disabled={
+                                            original.status ===
+                                            ProjectStatus.Deleting
+                                        }
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            onDeleteRow(row.original);
+                                            onDeleteRow(original);
                                         }}
                                     >
-                                        <DeleteIcon />
+                                        {original.status ===
+                                            ProjectStatus.Deleting && (
+                                            <BlueProgress />
+                                        )}
+                                        {original.status ===
+                                            ProjectStatus.Active && (
+                                            <DeleteIcon />
+                                        )}
                                     </IconButton>
                                 </span>
                             </Tooltip>
@@ -205,7 +263,7 @@ export const extraColumns = ({
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            shell.openItem(row.original.path);
+                                            shell.openItem(original.path);
                                         }}
                                     >
                                         <FolderOpenIcon />

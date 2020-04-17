@@ -1,31 +1,32 @@
 import { Finder } from '../utils/finder';
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { ProjectData } from '../types';
-import { tap, first, catchError } from 'rxjs/operators';
+import { catchError, delay, first, map, tap } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
-import compose from 'ramda/src/compose';
-import sum from 'ramda/src/sum';
-import map from 'ramda/src/map';
-import prop from 'ramda/src/prop';
-import { formatByBytes } from '../utils/helpers';
-import * as electronLog from 'electron-log';
 import path from 'path';
-import * as R from 'ramda';
 import { EMPTY, forkJoin, from } from 'rxjs';
 import chalk from 'chalk';
+import { ProjectStatus } from '../types/Project';
 import fs from 'fs-extra';
+import { useCalculateSize } from './useCalculateSize';
+import * as logger from 'electron-log';
+import { formatByBytes, sumBy } from '../utils/helpers';
+import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
+import { compose, uniq } from 'ramda';
+import { exec } from '../utils/exec';
 
-const logger = electronLog.create('use-scan');
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
-    Idle = 'idle'
+    Idle = 'idle',
 }
+
 export enum DeleteState {
     Deleting = 'deleting',
     Idle = 'idle',
-    Finished = 'finished'
+    Finished = 'finished',
 }
+
 export interface State {
     deleting: DeleteState;
     scanning: ScanState;
@@ -37,7 +38,7 @@ enum Actions {
     FinishedScan,
     Reset,
     DeleteProjects,
-    FinishedDelete
+    FinishedDelete,
 }
 
 function reducer(state: State, action: any): State {
@@ -45,37 +46,39 @@ function reducer(state: State, action: any): State {
         case Actions.Reset:
             return {
                 scanning: ScanState.Idle,
-                deleting: DeleteState.Idle
+                deleting: DeleteState.Idle,
             };
         case Actions.StartScan:
             return {
                 ...state,
-                scanning: ScanState.Loading
+                scanning: ScanState.Loading,
             };
         case Actions.PauseScan:
             return {
                 ...state,
-                scanning: ScanState.Idle
+                scanning: ScanState.Idle,
             };
         case Actions.FinishedScan:
             return {
                 ...state,
-                scanning: ScanState.Finished
+                scanning: ScanState.Finished,
             };
         case Actions.DeleteProjects:
             return {
                 ...state,
-                deleting: DeleteState.Deleting
+                deleting: DeleteState.Deleting,
             };
         case Actions.FinishedDelete:
             return {
                 ...state,
-                deleting: DeleteState.Finished
+                deleting: DeleteState.Finished,
             };
         default:
             throw new Error();
     }
 }
+
+const demoMode = !!process.env.DEMO_MODE;
 
 export const useScan = () => {
     const finder = useRef<Finder>();
@@ -84,6 +87,7 @@ export const useScan = () => {
     }
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [foldersScanned, setFoldersScanned] = useState(0);
+    const [totalSpace, setTotalSpace] = useState({ free: '', size: '' });
     const folders = useRef<string | string[]>();
     const [deletedProjects, setDeletedProjects] = useState<ProjectData[]>([]);
     const [drives, setDrives] = useState<Drive[]>([]);
@@ -91,17 +95,43 @@ export const useScan = () => {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle
     });
-    const sumSize = compose(sum, map(prop('size')));
-    const totalSizeString = useMemo(() => formatByBytes(sumSize(projects)), [
-        projects
-    ]);
-    function startScan(dir: string | string[]) {
+
+    useEffect(() => {
+        if (!folders.current) {
+            return;
+        }
+        let dirs = Array.isArray(folders.current) ? folders.current : [folders.current];
+        dirs = uniq(dirs.map(dir => path.parse(dir).root));
+        const calculateFreeSpace = compose(formatByBytes, sumBy('free'));
+        const calculateSize = compose(formatByBytes, sumBy('size'));
+        Promise.all(dirs.map(dir => checkDiskSpace(dir)))
+            .then((sizes: CheckDiskSpaceResult[]) => {
+                setTotalSpace({ free: calculateFreeSpace(sizes), size: calculateSize(sizes) });
+            });
+    }, [folders.current]);
+
+    const totalSizeString = useCalculateSize(projects);
+
+    const startScan = useCallback((dir: string | string[]) => {
         finder.current!.start(dir);
         folders.current = dir;
         dispatch({ type: Actions.StartScan });
-    }
-    function deleteProjects(deletedProjects: ProjectData[]) {
+    }, [finder.current, dispatch]);
+
+
+    const updateProjectsStatus = useCallback(({ updatedProjects, status }: { updatedProjects: ProjectData[], status: ProjectStatus }) => {
+        updatedProjects = updatedProjects.map(project => ({
+            ...project,
+            status: status
+        }));
+        finder.current!.updateProjects(
+            updatedProjects
+        );
+    }, [finder.current]);
+
+    const deleteProjects = useCallback((deletedProjects: ProjectData[]) => {
         dispatch({ type: Actions.DeleteProjects });
+        updateProjectsStatus({ updatedProjects: deletedProjects, status: ProjectStatus.Deleting });
         const paths = deletedProjects.map(
             project => `${path.join(project.path, 'node_modules')}`
         );
@@ -114,87 +144,104 @@ export const useScan = () => {
             )
         );
         forkJoin(
-            paths.map(path =>
-                from(fs.remove(path)).pipe(
-                    catchError(e => {
-                        logger.error(e);
-                        return EMPTY;
-                    })
+            demoMode
+                ? from([0]).pipe(delay(5000))
+                : paths.map(path =>
+                    from(fs.remove(path)).pipe(
+                        catchError(e => {
+                            console.error(e);
+                            return EMPTY;
+                        })
+                    )
                 )
-            )
         )
-            // exec(`rm -rf ${paths}`)
             .pipe(first())
             .subscribe(
                 () => {
                     setDeletedProjects(deletedProjects);
-                    const comp = (x: ProjectData, y: ProjectData) =>
-                        x.path === y.path;
-                    finder.current?.updateProjects(
-                        R.differenceWith(comp, projects, deletedProjects)
-                    );
+                    updateProjectsStatus({
+                        updatedProjects: deletedProjects,
+                        status: ProjectStatus.Deleted
+                    });
                     dispatch({ type: Actions.FinishedDelete });
                 },
-                e => console.log(e)
+                e => logger.error(e)
             );
-    }
-    function resetProjects() {
-        setProjects([]);
-        setDeletedProjects([]);
-    }
-    function resetScan() {
+    }, [dispatch, updateProjectsStatus, setDeletedProjects]);
+
+    const resetScan = useCallback(() => {
         finder.current?.destroy();
-        resetProjects();
         dispatch({ type: Actions.Reset });
         if (!folders.current) {
             return;
         }
         startScan(folders.current);
-    }
-    function pauseScan() {
+    }, [dispatch, finder.current, folders.current]);
+
+    const pauseScan = useCallback(() => {
         dispatch({ type: Actions.PauseScan });
         finder.current?.pause();
-    }
-    function stopScan() {
+    }, [finder.current, dispatch]);
+
+    const stopScan = useCallback(() => {
         dispatch({ type: Actions.FinishedScan });
         finder.current?.cancel();
-    }
-    function resumeScan() {
+    }, [finder.current, dispatch]);
+
+    const resumeScan = useCallback(() => {
         dispatch({ type: Actions.StartScan });
         finder.current?.resume();
-    }
+    }, [finder.current, dispatch]);
+
+
     useEffect(() => {
-        const scanEndSub = finder.current!.onScanEnd.subscribe(() =>
+        const sub = finder.current!.onScanEnd.subscribe(() =>
             dispatch({ type: Actions.FinishedScan })
         );
-        const totalFoldersScannedSub = finder.current?.foldersScanned$.subscribe(
+        return () => sub.unsubscribe();
+    }, [finder.current, dispatch]);
+
+    useEffect(() => {
+        const sub = finder.current?.foldersScanned$.subscribe(
             number => setFoldersScanned(number)
         );
-        const scanDriveSub = finder.current
+        return () => sub?.unsubscribe();
+    }, [finder.current]);
+
+    useEffect(() => {
+        const sub = finder.current
             ?.scanDrives()
             .subscribe(drives => setDrives(drives));
-        const getProjectsSub = finder.current?.projects$
-            .pipe(tap(projects => setProjects(projects)))
+        return () => sub?.unsubscribe();
+    }, [finder.current]);
+
+    useEffect(() => {
+        const sub = finder.current?.projects$
+            .pipe(
+                map(projects =>
+                    projects.filter(
+                        project => project.status !== ProjectStatus.Deleted
+                    )
+                ),
+                tap(projects => setProjects(projects))
+            )
             .subscribe();
-        const subscriptions = [
-            getProjectsSub,
-            scanDriveSub,
-            scanEndSub,
-            totalFoldersScannedSub
-        ];
-        return () => {
-            subscriptions.forEach(sub => sub?.unsubscribe());
-            finder.current!.destroy();
-        };
+        return () => sub?.unsubscribe();
+    }, [finder.current]);
+
+
+    // finder clean up
+    useEffect(() => {
+        return () => finder.current?.destroy();
     }, []);
 
     return {
         projects,
         startScan,
-        resetProjects,
         deleteProjects,
         deletedProjects,
         totalSizeString,
+        totalSpace,
         foldersScanned,
         pauseScan,
         resumeScan,

@@ -9,6 +9,7 @@ import { FolderInput } from './FolderInput';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
 import { isDarwin, isWin } from '../../constants';
+import { isEmpty } from 'ramda';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -22,7 +23,8 @@ const useStyles = makeStyles(() =>
         settingsContainer: {
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            minHeight: "135px"
         }
     })
 );
@@ -36,50 +38,57 @@ interface Props {
 export default function Home({ drives }: Props) {
     const classes = useStyles();
     const [directories, setDirectories] = useState<string[]>([]);
-    const [selectedDrives, setSelectedDrives] = useState<Drive[]>([]);
     const [scan, setScan] = useState<Scan>({
         type: ScanType.All,
-        title: 'All'
+        title: 'All',
     });
     useEffect(() => {
-        setDirectories(
-            drives.filter(({ path }) => path !== '/').map(({ path }) => path)
-        );
-    }, [drives]);
+        const dirs = drives.map(({ path }) => path);
+        if (isEmpty(dirs)) {
+            return;
+        }
+        setDirectories(dirs);
+    }, [drives, setDirectories]);
     useEffect(() => {
         if (!isDarwin || scan.type !== ScanType.All) {
             return;
         }
         setDirectories(['/']);
-    }, [drives, scan]);
-
+    }, []);
+    useEffect(() => {
+        if (!isDarwin || scan.type !== ScanType.All) {
+            return;
+        }
+        setDirectories(drives.map(({ path }) => path));
+    }, [scan, setDirectories, drives]);
     const scans = useMemo(() => {
         return [
             {
                 type: ScanType.All,
-                title: 'All'
+                title: 'All',
             },
             {
                 type: ScanType.Folder,
-                title: 'Folder'
+                title: 'Folder',
             },
             {
                 type: ScanType.Drives,
                 title: 'Drives',
-                visible: drives.length > 1
-            }
+                visible: drives.length > 1,
+            },
         ];
     }, [drives]);
 
     function handleScanChanged(scan: Scan) {
         setScan(scan);
     }
+
     function handleFolderChanged(folders: string[]) {
         setDirectories(folders);
     }
+
     function handleDriveChanged(drives: Drive[]) {
         setDirectories(drives.map(({ path }) => path));
-        setSelectedDrives(drives);
     }
 
     const shouldDisableScan =
@@ -90,12 +99,12 @@ export default function Home({ drives }: Props) {
             maxWidth={false}
             disableGutters
             classes={{
-                root: classes.containerRoot
+                root: classes.containerRoot,
             }}
         >
             <Grid
                 classes={{
-                    root: classes.gridRoot
+                    root: classes.gridRoot,
                 }}
                 container
                 direction="column"
@@ -103,29 +112,22 @@ export default function Home({ drives }: Props) {
                 alignItems="center"
             >
                 <ScanButton
+                    scanType={scan.type}
                     disabled={shouldDisableScan}
                     directories={directories}
                 />
                 <div className={classes.settingsContainer}>
                     <ScanSelection
+                        selectedScan={scan}
                         onChangeScan={handleScanChanged}
                         scans={scans}
-                        title={scan.title}
                     />
                     {scan.type === ScanType.Folder && (
-                        <FolderInput
-                            directories={
-                                isWin && directories.length === drives.length
-                                    ? []
-                                    : directories
-                            }
-                            onChange={handleFolderChanged}
-                        />
+                        <FolderInput onChange={handleFolderChanged} />
                     )}
                     {scan.type === ScanType.Drives && drives.length > 1 && (
                         <DriveSelector
                             drives={drives}
-                            selectedDrives={selectedDrives}
                             onChange={handleDriveChanged}
                         />
                     )}

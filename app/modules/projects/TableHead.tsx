@@ -51,9 +51,10 @@ export const TableHead: React.FC<Props> = ({ headerGroups }) => {
     const classes = useStyles();
 
     return (
-        <MuiTableHead>
+        <MuiTableHead component='div'>
             {headerGroups.map((headerGroup: any) => (
                 <TableRow
+                    component="div"
                     {...headerGroup.getHeaderGroupProps()}
                     classes={{
                         root: classes.rowRoot
@@ -61,6 +62,7 @@ export const TableHead: React.FC<Props> = ({ headerGroups }) => {
                 >
                     {headerGroup.headers.map((column: any) => (
                         <TableCell
+                            component="div"
                             {...column.getHeaderProps(
                                 column.getSortByToggleProps()
                             )}
