@@ -66,7 +66,7 @@
         "nsis": {
             "allowToChangeInstallationDirectory": true,
             "perMachine": true,
-
+            "include": "build/installer.nsh",
             "oneClick": false
         },
         "dmg": {
