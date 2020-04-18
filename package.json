@@ -100,12 +100,18 @@
             "buildResources": "resources",
             "output": "release"
         },
-        "publish": {
-            "provider": "github",
-            "owner": "omridevk",
-            "repo": "node-cleaner",
-            "private": false
-        }
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "omridevk",
+                "repo": "node-cleaner",
+                "private": false
+            },
+            {
+                "provider": "s3",
+                "bucket": "node-cleaner"
+            }
+        ]
     },
     "repository": {
         "type": "git",
