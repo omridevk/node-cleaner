@@ -51,6 +51,7 @@
         ]
     },
     "build": {
+        "extends": null,
         "productName": "Node Cleaner",
         "appId": "org.develar.NodeCleaner",
         "files": [
