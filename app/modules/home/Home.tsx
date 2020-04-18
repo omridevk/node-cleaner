@@ -15,17 +15,17 @@ const useStyles = makeStyles(() =>
     createStyles({
         gridRoot: {
             height: '100%',
-            width: '100%'
+            width: '100%',
         },
         containerRoot: {
-            height: '100%'
+            height: '100%',
         },
         settingsContainer: {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            minHeight: "135px"
-        }
+            minHeight: '135px',
+        },
     })
 );
 
@@ -45,18 +45,13 @@ export default function Home({ drives }: Props) {
     useEffect(() => {
         const dirs = drives.map(({ path }) => path);
         if (isEmpty(dirs)) {
+            setDirectories(['/']);
             return;
         }
         setDirectories(dirs);
     }, [drives, setDirectories]);
     useEffect(() => {
-        if (!isDarwin || scan.type !== ScanType.All) {
-            return;
-        }
-        setDirectories(['/']);
-    }, []);
-    useEffect(() => {
-        if (!isDarwin || scan.type !== ScanType.All) {
+        if (scan.type !== ScanType.All) {
             return;
         }
         setDirectories(drives.map(({ path }) => path));

@@ -7,7 +7,6 @@ import { ProjectDataContext } from './Root';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import { useLocation } from 'react-router';
 import { ScanState } from '../hooks/useScan';
-import { useSnackbar } from 'notistack';
 import { head } from 'ramda';
 
 const Alert = (props: AlertProps) => (
