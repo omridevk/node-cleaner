@@ -10461,14 +10461,13 @@ normalize-url@^4.1.0:
   resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.0.tgz#453354087e6ca96957bd8f5baf753f5982142129"
   integrity sha512-2s47yzUxdexf1OhyRi4Em83iQk0aPvwTddtFz4hnSSw9dCEsLEGf6SwIO8ss/19S9iBb5sJaOuTvTGDeZI00BQ==
 
-notistack@^0.9.9:
-  version "0.9.9"
-  resolved "https://registry.yarnpkg.com/notistack/-/notistack-0.9.9.tgz#da53e2c122df3233bb970e5c600f6c3212285d13"
-  integrity sha512-C783KedXtgCWfd/wD4qzKEF4bP/sVF9cAveVpWAFhzypYo0q6l3xLcaLVtUnOBUXZY7KWfvg+lv4XSOiofXeTA==
+notistack@^0.9.10:
+  version "0.9.10"
+  resolved "https://registry.yarnpkg.com/notistack/-/notistack-0.9.10.tgz#f662cdd46f0a7ce7f26ff1a5d9515d38d8279164"
+  integrity sha512-Pm2lrbEUdAy7HF2o7nlrzkere3611xlPj+ggpfhs1ahD0b0ryY4nPtZPsD4sI9o0Efa2k/P9YMBfbLB0LDGklg==
   dependencies:
     classnames "^2.2.6"
     hoist-non-react-statics "^3.3.0"
-    prop-types "^15.7.2"
     react-is "^16.8.6"
 
 npm-conf@^1.1.3:
