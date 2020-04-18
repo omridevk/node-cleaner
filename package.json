@@ -101,7 +101,7 @@
         },
         "publish": {
             "provider": "github",
-            "owner": "node-cleaner",
+            "owner": "omridevk",
             "repo": "node-cleaner",
             "private": false
         }
