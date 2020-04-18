@@ -25,6 +25,15 @@ To package apps for the local platform:
 yarn package
 ```
 
+## Publishing
+
+1. Development should happen on sidebranch
+2. Increase version in both package.json app/package.json
+3. When feature is ready merge to master
+4. This will trigger Travis CI 
+5. Travis will publish to S3 and create GitHub draft
+
+
 ## Docs
 
 See our [docs and guides here](https://electron-react-boilerplate.js.org/docs/installation)
