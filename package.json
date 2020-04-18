@@ -54,6 +54,7 @@
         "extends": null,
         "productName": "Node Cleaner",
         "appId": "org.develar.NodeCleaner",
+        "npmRebuild": false,
         "files": [
             "dist/",
             "node_modules/",
