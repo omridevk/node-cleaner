@@ -60,6 +60,12 @@
             "main.prod.js.map",
             "package.json"
         ],
+        "nsis": {
+            "allowToChangeInstallationDirectory": true,
+            "perMachine": true,
+
+            "oneClick": false
+        },
         "dmg": {
             "contents": [
                 {
@@ -76,8 +82,7 @@
         },
         "win": {
             "target": [
-                "nsis",
-                "msi"
+                "nsis"
             ]
         },
         "linux": {
