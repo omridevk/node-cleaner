@@ -308,7 +308,7 @@
         "redux-thunk": "^2.3.0",
         "rimraf": "^3.0.2",
         "rxjs": "^6.5.5",
-        "source-map-support": "^0.5.16",
+        "source-map-support": "^0.5.17",
         "sudo-prompt": "^9.1.1"
     },
     "devEngines": {
