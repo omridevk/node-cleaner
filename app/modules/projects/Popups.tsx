@@ -24,7 +24,6 @@ interface Props {
 }
 
 export const Popups: React.FC<Props> = ({
-    contextMenuState,
     toggleAllRowsSelected,
 }) => {
     const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
@@ -58,49 +57,12 @@ export const Popups: React.FC<Props> = ({
     }, [deletedProjects]);
 
     function handleDeleteProject() {
-        const { project } = contextMenuState;
-        if (project === null) {
-            return;
-        }
-        setDeletedProject(project);
-    }
-    function handleOpenPath() {
-        const { project } = contextMenuState;
-        if (!project?.path) {
-            return;
-        }
-        shell.openItem(project?.path);
-    }
 
-    const contextMenuItems = useMemo(() => {
-        const { project } = contextMenuState;
-        const menu = [
-            {
-                text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
-                action: handleOpenPath,
-            },
-            {
-                text: 'Copy path to clipboard',
-                action: () => {
-                    const { project } = contextMenuState;
-                    if (!project) {
-                        return;
-                    }
-                    clipboard.writeText(project.path);
-                },
-            },
-        ];
-        if (project?.status === ProjectStatus.Deleting) {
-            return menu;
-        }
-        return [
-            ...menu,
-            {
-                text: 'Delete',
-                action: handleDeleteProject,
-            },
-        ];
-    }, [contextMenuState]);
+        // if (project === null) {
+        //     return;
+        // }
+        // setDeletedProject(project);
+    }
     const message =
         deletedProjects.length > 1
             ? `Successfully deleted ${deletedProjects.length} projects`
@@ -126,12 +88,6 @@ export const Popups: React.FC<Props> = ({
                     </Typography>
                 </MuiAlert>
             </Snackbar>
-            <ContextMenu
-                items={contextMenuItems}
-                mouseX={contextMenuState.mouseX}
-                mouseY={contextMenuState.mouseY}
-                project={contextMenuState.project}
-            />
             <DeleteProjectsDialog
                 handleModalClosed={() => {
                     setDeletedProject(null);

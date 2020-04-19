@@ -11,7 +11,7 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable,
+    useTable
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, {
@@ -19,7 +19,7 @@ import React, {
     useContext,
     useEffect,
     useMemo,
-    useState,
+    useState
 } from 'react';
 import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
@@ -39,7 +39,7 @@ function fuzzyTextFilterFn(
     id: IdType<any>,
     filterValue: FilterValue
 ) {
-    return matchSorter(rows, filterValue, { keys: [(row) => row.values[id]] });
+    return matchSorter(rows, filterValue, { keys: [row => row.values[id]] });
 }
 
 interface TableProps {
@@ -58,7 +58,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         pauseScan,
         resetScan,
         resumeScan,
-        darkMode,
+        darkMode
     } = useContext(ProjectDataContext);
 
     const loading = scanning === ScanState.Loading;
@@ -82,12 +82,6 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         }
         resumeScan();
     }, [loading, pauseScan, resetScan]);
-
-    const [contextMenuState, setContextMenuState] = useState<ContextMenuState>({
-        project: null,
-        mouseX: null,
-        mouseY: null,
-    });
     const filterTypes = React.useMemo(
         () => ({
             // Add a new fuzzyTextFilterFn filter type.
@@ -99,7 +93,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                 id: IdType<string>,
                 filterValue: FilterValue
             ) => {
-                return rows.filter((row) => {
+                return rows.filter(row => {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
@@ -107,7 +101,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                               .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
-            },
+            }
         }),
         []
     );
@@ -117,7 +111,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             width: 150,
             minWidth: 150,
             Filter: DefaultColumnFilter,
-            maxWidth: 400,
+            maxWidth: 400
         }),
         []
     );
@@ -125,8 +119,8 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         () => [
             {
                 id: 'size',
-                desc: true,
-            },
+                desc: true
+            }
         ],
         []
     );
@@ -140,9 +134,10 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         setGlobalFilter,
         toggleAllRowsSelected,
         prepareRow,
+        isAllRowsSelected,
         toggleRowSelected,
         selectedFlatRows,
-        state: { selectedRowIds, globalFilter },
+        state: { selectedRowIds, globalFilter }
     } = useTable(
         {
             autoResetSelectedRows: false,
@@ -152,11 +147,11 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             columns,
             filterTypes,
             initialState: {
-                sortBy: defaultSortBy,
+                sortBy: defaultSortBy
             },
-            getRowId: React.useCallback((row) => row.path, []),
+            getRowId: React.useCallback(row => row.path, []),
             defaultColumn,
-            data: projects,
+            data: projects
         },
         useFilters,
         useGlobalFilter,
@@ -206,7 +201,8 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                 <TableHead headerGroups={headerGroups} />
                 <TableBody component="div">
                     <Rows
-                        handleContextMenuOpen={setContextMenuState}
+                        isAllRowsSelected={isAllRowsSelected}
+                        toggleAllRowsSelected={toggleAllRowsSelected}
                         rows={rows}
                         toggleRowSelected={toggleRowSelected}
                         prepareRow={prepareRow}
@@ -215,7 +211,6 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             </MaUTable>
             <Popups
                 toggleAllRowsSelected={toggleAllRowsSelected}
-                contextMenuState={contextMenuState}
             />
         </>
     );

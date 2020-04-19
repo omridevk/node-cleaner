@@ -7,6 +7,8 @@ import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import Alert from '@material-ui/lab/Alert';
 import { ProjectStatus } from '../../types/Project';
+import { clipboard, remote, shell } from 'electron';
+import { isDarwin } from '../../constants';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -23,38 +25,78 @@ interface RowsProps {
     rows: Array<Row<ProjectData>>;
     toggleRowSelected: (rowId: IdType<ProjectData>, set?: boolean) => void;
     prepareRow: (row: Row<ProjectData>) => void;
-    handleContextMenuOpen: (data: {
-        project: ProjectData;
-        mouseX: null | number;
-        mouseY: null | number;
-    }) => void;
+    isAllRowsSelected: boolean;
+    toggleAllRowsSelected: (value?: boolean) => void;
 }
+const { Menu, MenuItem } = remote;
+
+interface CreateContextMenuProps {
+    project: ProjectData;
+    isAllRowsSelected: boolean;
+    toggleAllRowsSelected: (value?) => void;
+}
+
+const createContextMenu = ({
+    project,
+    isAllRowsSelected,
+    toggleAllRowsSelected
+}: CreateContextMenuProps) => {
+
+    const template = [
+        {
+            label: 'Open',
+            click() {
+                shell.openItem(project.path);
+            }
+        },
+        {
+            label: 'Copy project path to clipboard',
+            click() {
+                clipboard.writeText(project.path);
+            }
+        },
+        {
+            label: isAllRowsSelected ? `Deselect All` : `Select All`,
+            click() {
+                toggleAllRowsSelected();
+            }
+        },
+        {
+            label: `Delete`,
+            click() {
+                // todo delete project
+                console.log('delete projet: ', { project });
+            },
+            enabled: project.status !== ProjectStatus.Deleting
+        }
+    ];
+    return Menu.buildFromTemplate(template);
+};
 
 // @ts-ignore
 export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef(
-    ({ rows, prepareRow, toggleRowSelected, handleContextMenuOpen }, _) => {
+    (
         {
-            const handleContextMenu = (
-                event: React.MouseEvent<HTMLDivElement>,
-                row: Row<ProjectData>
-            ) => {
-                const { original: project } = row;
-                if (project.status === ProjectStatus.Deleting) {
-                    return;
-                }
-                event.preventDefault();
-                handleContextMenuOpen({
-                    mouseX: event.clientX - 2,
-                    mouseY: event.clientY - 4,
-                    project
+            rows,
+            prepareRow,
+            toggleRowSelected,
+            toggleAllRowsSelected,
+            isAllRowsSelected
+        },
+        _
+    ) => {
+        {
+            const handleContextMenu = ({
+                project,
+                isAllRowsSelected,
+                toggleAllRowsSelected
+            }: CreateContextMenuProps) => {
+                const menu = createContextMenu({
+                    project,
+                    isAllRowsSelected,
+                    toggleAllRowsSelected
                 });
-                // clear selection when opening
-                // context menu
-                const selection = window.getSelection();
-                if (selection === null) {
-                    return;
-                }
-                selection.empty();
+                menu.popup({ window: remote.getCurrentWindow() });
             };
 
             const classes = useStyles();
@@ -81,7 +123,13 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                 return (
                     <TableRow
                         component="div"
-                        onContextMenu={event => handleContextMenu(event, row)}
+                        onContextMenu={() =>
+                            handleContextMenu({
+                                project: row.original,
+                                toggleAllRowsSelected,
+                                isAllRowsSelected
+                            })
+                        }
                         {...row.getRowProps()}
                         classes={{
                             root:
@@ -89,7 +137,10 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                                     ? ''
                                     : classes.rowRoot
                         }}
-                        onClick={() => handleRowClicked(row)}
+                        onClick={e => {
+                            e.preventDefault();
+                            handleRowClicked(row);
+                        }}
                     >
                         {row.cells.map(cell => {
                             return (
