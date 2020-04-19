@@ -1,7 +1,7 @@
 {
     "name": "node-cleaner",
     "productName": "Node Cleaner",
-    "version": "0.0.2",
+    "version": "0.0.2-master",
     "description": "Application to clean unused node_modules folders to free up space.",
     "scripts": {
         "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
@@ -12,7 +12,7 @@
         "dev": "cross-env START_HOT=1 node -r @babel/register ./internals/scripts/CheckPortInUse.js && cross-env START_HOT=1 yarn start-renderer-dev",
         "dev-demo": "cross-env DEMO_MODE=1 yarn dev",
         "electron-rebuild": "electron-rebuild --parallel --force --types prod,dev,optional --module-dir app",
-        "release": "yarn build && electron-builder",
+        "release": "yarn build && electron-builder --publish always",
         "ts": "tsc",
         "lint": "cross-env NODE_ENV=development eslint . --cache --ext .js,.jsx,.ts,.tsx",
         "lint-fix": "yarn --silent lint --fix; exit 0",
