@@ -33,6 +33,7 @@ import { TableHead } from './TableHead';
 import { Header } from './Header';
 import { ScanState } from '../../hooks/useScan';
 import { useHistory } from 'react-router';
+import { ProjectStatus } from '../../types/Project';
 
 function fuzzyTextFilterFn(
     rows: Row<ProjectData>[],
@@ -50,7 +51,6 @@ interface TableProps {
 export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
     const {
         projects = [],
-        deletedProjects,
         foldersScanned,
         stopScan,
         state: { scanning },
@@ -61,6 +61,20 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         darkMode
     } = useContext(ProjectDataContext);
 
+    const activeProjects = useMemo(
+        () =>
+            projects.filter(
+                project => project.status !== ProjectStatus.Deleted
+            ),
+        [projects]
+    );
+    const deletedProjects = useMemo(
+        () =>
+            projects.filter(
+                project => project.status === ProjectStatus.Deleted
+            ),
+        [projects]
+    );
     const loading = scanning === ScanState.Loading;
     const history = useHistory();
 
@@ -69,10 +83,10 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         history.push('/home');
     }
     function deleteAll() {
-        if (!projects?.length) {
+        if (!activeProjects?.length) {
             return;
         }
-        onDeleteProjects(projects);
+        onDeleteProjects(activeProjects);
     }
 
     const toggleScan = useCallback(() => {
@@ -119,14 +133,14 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         () => [
             {
                 id: 'size',
-                desc: true
+                desc: false
             }
         ],
         []
     );
     // Use the state and functions returned from useTable to build your UI
     // @ts-ignore
-    const {
+    let {
         getTableProps,
         headerGroups,
         rows,
@@ -151,7 +165,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             },
             getRowId: React.useCallback(row => row.path, []),
             defaultColumn,
-            data: projects
+            data: activeProjects
         },
         useFilters,
         useGlobalFilter,
@@ -163,10 +177,10 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
     );
     // when we delete stuff, we want to reset all selected state.
     useEffect(() => {
-        toggleAllRowsSelected(!deletedProjects.length);
         if (!deletedProjects.length) {
             return;
         }
+        toggleAllRowsSelected(!deletedProjects.length);
     }, [deletedProjects]);
 
     const onResetScan = useCallback(() => {
@@ -181,7 +195,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                 foldersScanned={foldersScanned}
                 resetScan={onResetScan}
                 onDeleteAll={deleteAll}
-                projects={projects!}
+                projects={activeProjects!}
                 toggleScanState={toggleScan}
                 onCancelScan={cancelScan}
                 darkMode={darkMode}
@@ -209,9 +223,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <Popups
-                toggleAllRowsSelected={toggleAllRowsSelected}
-            />
+            <Popups toggleAllRowsSelected={toggleAllRowsSelected} />
         </>
     );
 }

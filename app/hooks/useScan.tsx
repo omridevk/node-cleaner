@@ -12,8 +12,7 @@ import { useCalculateSize } from './useCalculateSize';
 import * as logger from 'electron-log';
 import { formatByBytes, sumBy } from '../utils/helpers';
 import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
-import { compose, uniq } from 'ramda';
-import { exec } from '../utils/exec';
+import { compose, differenceWith, eqBy, prop, unionWith, uniq } from 'ramda';
 
 export enum ScanState {
     Loading = 'loading',
@@ -95,6 +94,12 @@ export const useScan = () => {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle
     });
+    // just remove them from state, don't delete them.
+    // after it was deleted.
+    const removeProjects = (projects: ProjectData[] | ProjectData) => {
+        projects = Array.isArray(projects) ? projects : [projects];
+        setProjects(prevProjects => differenceWith(eqBy(prop('path')), prevProjects, projects as ProjectData[]));
+    };
 
     useEffect(() => {
         if (!folders.current) {
@@ -114,9 +119,11 @@ export const useScan = () => {
 
     const startScan = useCallback((dir: string | string[]) => {
         finder.current!.start(dir);
+        setProjects([]);
         folders.current = dir;
         dispatch({ type: Actions.StartScan });
     }, [finder.current, dispatch]);
+
 
 
     const updateProjectsStatus = useCallback(({ updatedProjects, status }: { updatedProjects: ProjectData[], status: ProjectStatus }) => {
@@ -124,9 +131,11 @@ export const useScan = () => {
             ...project,
             status: status
         }));
-        finder.current!.updateProjects(
-            updatedProjects
-        );
+
+        setProjects((projects) => unionWith(eqBy(prop('path')), updatedProjects, projects));
+        // finder.current!.updateProjects(
+        //     updatedProjects
+        // );
     }, [finder.current]);
 
     const deleteProjects = useCallback((deletedProjects: ProjectData[]) => {
@@ -158,7 +167,7 @@ export const useScan = () => {
             .pipe(first())
             .subscribe(
                 () => {
-                    setDeletedProjects(deletedProjects);
+                    // setDeletedProjects(deletedProjects);
                     updateProjectsStatus({
                         updatedProjects: deletedProjects,
                         status: ProjectStatus.Deleted
@@ -216,18 +225,25 @@ export const useScan = () => {
     }, [finder.current]);
 
     useEffect(() => {
-        const sub = finder.current?.projects$
-            .pipe(
-                map(projects =>
-                    projects.filter(
-                        project => project.status !== ProjectStatus.Deleted
-                    )
-                ),
-                tap(projects => setProjects(projects))
-            )
-            .subscribe();
-        return () => sub?.unsubscribe();
+        const sub = finder.current?.project$.subscribe(project => {
+            setProjects(projects => [...projects, project]);
+        });
+        return () => sub!.unsubscribe();
     }, [finder.current]);
+
+    // useEffect(() => {
+    //     const sub = finder.current?.projects$
+    //         .pipe(
+    //             map(projects =>
+    //                 projects.filter(
+    //                     project => project.status !== ProjectStatus.Deleted
+    //                 )
+    //             ),
+    //             // tap(projects => setProjects(projects))
+    //         )
+    //         .subscribe();
+    //     return () => sub?.unsubscribe();
+    // }, [finder.current]);
 
 
     // finder clean up
@@ -239,6 +255,8 @@ export const useScan = () => {
         projects,
         startScan,
         deleteProjects,
+        removeProjects,
+        updateProjectsStatus,
         deletedProjects,
         totalSizeString,
         totalSpace,

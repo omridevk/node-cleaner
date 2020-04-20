@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -8,7 +8,7 @@ import { ProjectData } from '../../types';
 import Alert from '@material-ui/lab/Alert';
 import { ProjectStatus } from '../../types/Project';
 import { clipboard, remote, shell } from 'electron';
-import { isDarwin } from '../../constants';
+import { ProjectDataContext } from '../../containers/Root';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -28,20 +28,27 @@ interface RowsProps {
     isAllRowsSelected: boolean;
     toggleAllRowsSelected: (value?: boolean) => void;
 }
-const { Menu, MenuItem } = remote;
+const { Menu } = remote;
 
 interface CreateContextMenuProps {
     project: ProjectData;
+    toggleAllRowsSelected: (value?: boolean) => void;
     isAllRowsSelected: boolean;
-    toggleAllRowsSelected: (value?) => void;
+    updateProjectsStatus: ({
+        updatedProjects,
+        status
+    }: {
+        updatedProjects: ProjectData[];
+        status: ProjectStatus;
+    }) => void;
 }
 
 const createContextMenu = ({
     project,
+    updateProjectsStatus,
     isAllRowsSelected,
     toggleAllRowsSelected
 }: CreateContextMenuProps) => {
-
     const template = [
         {
             label: 'Open',
@@ -65,7 +72,10 @@ const createContextMenu = ({
             label: `Delete`,
             click() {
                 // todo delete project
-                console.log('delete projet: ', { project });
+                updateProjectsStatus({
+                    updatedProjects: [project],
+                    status: ProjectStatus.PendingDelete
+                });
             },
             enabled: project.status !== ProjectStatus.Deleting
         }
@@ -85,15 +95,13 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
         },
         _
     ) => {
+        const { updateProjectsStatus } = useContext(ProjectDataContext);
         {
-            const handleContextMenu = ({
-                project,
-                isAllRowsSelected,
-                toggleAllRowsSelected
-            }: CreateContextMenuProps) => {
+            const handleContextMenu = (project: ProjectData) => {
                 const menu = createContextMenu({
                     project,
                     isAllRowsSelected,
+                    updateProjectsStatus,
                     toggleAllRowsSelected
                 });
                 menu.popup({ window: remote.getCurrentWindow() });
@@ -123,13 +131,7 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                 return (
                     <TableRow
                         component="div"
-                        onContextMenu={() =>
-                            handleContextMenu({
-                                project: row.original,
-                                toggleAllRowsSelected,
-                                isAllRowsSelected
-                            })
-                        }
+                        onContextMenu={() => handleContextMenu(row.original)}
                         {...row.getRowProps()}
                         classes={{
                             root:

@@ -18,7 +18,7 @@ import {
     emphasize,
     fade,
     lighten,
-    Theme,
+    Theme
 } from '@material-ui/core';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
@@ -27,6 +27,7 @@ import { compose } from 'ramda';
 import withStyles from '@material-ui/core/styles/withStyles';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import useTheme from '@material-ui/core/styles/useTheme';
+import { ProjectStatus } from '../../types/Project';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -42,17 +43,17 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
             zIndex: 100,
-            justifyContent: "space-between",
+            justifyContent: 'space-between',
             // position: 'sticky',
             borderBottom: 'solid 1px rgba(0, 0, 0, 0.12)',
             top: 0,
             backgroundColor:
                 theme.palette.type === 'light'
                     ? 'rgba(227, 227, 227, 0.85)'
-                    : theme.palette.primary.dark,
+                    : theme.palette.primary.dark
         },
         actionsContainer: {
-            display: 'flex',
+            display: 'flex'
         },
         highlight:
             theme.palette.type === 'light'
@@ -61,15 +62,15 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
                       backgroundColor: lighten(
                           theme.palette.secondary.light,
                           0.85
-                      ),
+                      )
                   }
                 : {
                       color: theme.palette.text.primary,
-                      backgroundColor: theme.palette.secondary.dark,
+                      backgroundColor: theme.palette.secondary.dark
                   },
         rightSide: {
-            display: "flex",
-            alignItems: "center"
+            display: 'flex',
+            alignItems: 'center'
         }
     })
 );
@@ -77,15 +78,13 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
 const SearchField = ({
     preGlobalFilteredRows,
     globalFilter,
-    setGlobalFilter,
+    setGlobalFilter
 }: any) => {
     const count = preGlobalFilteredRows.length;
     return (
         <TextField
             value={globalFilter || ''}
-            onChange={(event) =>
-                setGlobalFilter(event.target.value || undefined)
-            }
+            onChange={event => setGlobalFilter(event.target.value || undefined)}
             placeholder={`Search ${count} projects`}
             InputProps={{
                 startAdornment: (
@@ -104,7 +103,7 @@ const SearchField = ({
                             <ClearIcon color="inherit" fontSize="small" />
                         </IconButton>
                     </InputAdornment>
-                ),
+                )
             }}
         />
     );
@@ -132,28 +131,25 @@ const InfoIcon = withStyles({
             margin: '0 4px',
             backgroundColor: color,
             display: 'inline-block',
-            borderRadius: '30%',
+            borderRadius: '30%'
             // border: `1px solid ${emphasize(color, 0.5)}`
         };
-    },
+    }
 })(({ classes }: { theme: Theme; color?: string; classes?: any }) => {
-    return <div className={classes.root}/>;
+    return <div className={classes.root} />;
 });
 const Header = ({
     numSelected,
     projects = [],
     totalSizeString = '',
     totalSelectedSize = '',
-    totalSpace,
+    totalSpace
 }: HeaderProps) => {
     const classes = useToolbarStyles();
     const theme = useTheme();
     return (
         <>
-            <Typography
-                color="inherit"
-                variant="subtitle1"
-            >
+            <Typography color="inherit" variant="subtitle1">
                 {numSelected
                     ? `${numSelected}/${projects.length} selected, size: ${totalSelectedSize}`
                     : ''}{' '}
@@ -161,10 +157,7 @@ const Header = ({
                     ? `${projects.length} Projects found, total size: ${totalSizeString}`
                     : ''}
             </Typography>
-            <Typography
-                color="inherit"
-                variant="subtitle2"
-            >
+            <Typography color="inherit" variant="subtitle2">
                 <b>Machine Info: {'   '}</b>
                 <InfoIcon
                     color={theme.palette.common.white}
@@ -185,7 +178,7 @@ export const Toolbar = React.forwardRef(
             preGlobalFilteredRows,
             globalFilter,
             setGlobalFilter,
-            onDeleteSelected,
+            onDeleteSelected
         }: ToolbarProps,
         _
     ) => {
@@ -193,27 +186,32 @@ export const Toolbar = React.forwardRef(
         const { totalSizeString, projects = [], totalSpace } = useContext(
             ProjectDataContext
         );
+        const activeProjects = useMemo(() => {
+            return projects.filter(
+                project => project.status !== ProjectStatus.Deleted
+            );
+        }, [projects]);
         const numSelected = Object.keys(selectedRowIds).length;
         const totalSelectedSize = useMemo(() => {
             const calculateTotalSize = compose(formatByBytes, sumBySize);
             return calculateTotalSize(
-                selectedFlatRows.map((row) => row.original)
+                selectedFlatRows.map(row => row.original)
             );
         }, [selectedRowIds]);
 
         function handleDeleteSelected() {
-            onDeleteSelected(selectedFlatRows.map((row) => row.original));
+            onDeleteSelected(selectedFlatRows.map(row => row.original));
         }
 
         return (
             <MaUToolbar
                 className={clsx(classes.root, {
-                    [classes.highlight]: numSelected > 0,
+                    [classes.highlight]: numSelected > 0
                 })}
             >
                 <Header
                     totalSpace={totalSpace}
-                    projects={projects}
+                    projects={activeProjects}
                     totalSelectedSize={totalSelectedSize}
                     totalSizeString={totalSizeString}
                     numSelected={numSelected}

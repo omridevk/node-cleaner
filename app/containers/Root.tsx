@@ -15,6 +15,7 @@ import { SnackbarProvider } from 'notistack';
 import { maximumSnackbars } from '../constants';
 import { ipcRenderer } from 'electron';
 import { Messages } from '../enums/messages';
+import { ProjectStatus } from '../types/Project';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -24,6 +25,8 @@ const defaultContext = {
     foldersScanned: 0,
     deletedProjects: [],
     resetScan: noop,
+    updateProjectsStatus: noop,
+    removeProjects: noop,
     startScan: (_: any) => {},
     totalSpace: { free: '', size: '' },
     pauseScan: noop,
@@ -31,7 +34,7 @@ const defaultContext = {
     deleteProjects: noop,
     resumeScan: noop,
     currentFolder: '',
-    drives: [],
+    drives: []
 };
 
 export const ProjectDataContext = React.createContext<{
@@ -40,7 +43,15 @@ export const ProjectDataContext = React.createContext<{
     foldersScanned: number;
     totalSpace: { free: string; size: string };
     toggleDarkMode: () => void;
+    updateProjectsStatus: ({
+        updatedProjects,
+        status
+    }: {
+        updatedProjects: ProjectData[];
+        status: ProjectStatus;
+    }) => void;
     deletedProjects: ProjectData[];
+    removeProjects: (projects: ProjectData[] | ProjectData) => void;
     resetScan: () => void;
     deleteProjects: (projects: ProjectData[]) => void;
     darkMode: boolean;
@@ -61,16 +72,16 @@ type Props = {
 
 const darkTheme = createMuiTheme({
     palette: {
-        type: 'dark',
-    },
+        type: 'dark'
+    }
 });
 const theme = createMuiTheme({
     palette: {
-        primary: blue,
-    },
+        primary: blue
+    }
 });
 
-const Root = ({ store, history, useDarkMode = false}: Props) => {
+const Root = ({ store, history, useDarkMode = false }: Props) => {
     const [darkMode, setDarkMode] = useState(useDarkMode);
     useEffect(() => {
         function onChangeTheme(_, darkMode: boolean) {
@@ -78,8 +89,8 @@ const Root = ({ store, history, useDarkMode = false}: Props) => {
         }
         ipcRenderer.on(Messages.CHANGE_THEME, onChangeTheme);
         return () => {
-            ipcRenderer.off(Messages.CHANGE_THEME, onChangeTheme)
-        }
+            ipcRenderer.off(Messages.CHANGE_THEME, onChangeTheme);
+        };
     }, []);
     const {
         projects,
@@ -90,11 +101,13 @@ const Root = ({ store, history, useDarkMode = false}: Props) => {
         totalSpace,
         resetScan,
         deleteProjects,
+        removeProjects,
         foldersScanned,
+        updateProjectsStatus,
         deletedProjects,
         state,
         drives,
-        totalSizeString,
+        totalSizeString
     } = useScan();
 
     return (
@@ -107,20 +120,22 @@ const Root = ({ store, history, useDarkMode = false}: Props) => {
                             value={{
                                 drives,
                                 totalSpace,
+                                removeProjects,
                                 resetScan,
                                 foldersScanned,
                                 darkMode,
                                 resumeScan,
+                                updateProjectsStatus,
                                 startScan,
                                 deleteProjects,
                                 deletedProjects,
                                 stopScan,
                                 pauseScan,
                                 toggleDarkMode: () =>
-                                    setDarkMode((prevState) => !prevState),
+                                    setDarkMode(prevState => !prevState),
                                 projects,
                                 state,
-                                totalSizeString,
+                                totalSizeString
                             }}
                         >
                             <Provider store={store}>

@@ -1,10 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { ContextMenu } from '../../common/ContextMenu';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
-import { ContextMenuState } from '../../types/ContextMenuState';
-import { isDarwin, maximumSnackbars } from '../../constants';
-import { shell } from 'electron';
-import { ProjectData } from '../../types';
+import { maximumSnackbars } from '../../constants';
 import { ProjectDataContext } from '../../containers/Root';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -13,67 +9,97 @@ import { formatByBytes } from '../../utils/helpers';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
-import { ProjectStatus } from '../../types/Project';
+import { ProjectData, ProjectStatus } from '../../types/Project';
 import { useSnackbar } from 'notistack';
-import { head } from 'ramda';
-import { clipboard } from 'electron';
+import { differenceWith, eqBy, head, isEmpty } from 'ramda';
 
 interface Props {
-    contextMenuState: ContextMenuState;
     toggleAllRowsSelected: (value?: boolean) => void;
 }
 
-export const Popups: React.FC<Props> = ({
-    toggleAllRowsSelected,
-}) => {
-    const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
+const snackBarHideDuration = 4000;
+
+export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
+    const {
+        deleteProjects,
+        projects = [],
+        updateProjectsStatus,
+        removeProjects
+    } = useContext(ProjectDataContext);
+    const [showModal, setShowModal] = useState(false);
+    const [showedSnackbar, setShowedSnackbar] = useState<ProjectData[]>([]);
+    const deleted = useMemo(
+        () =>
+            projects.filter(
+                project => project.status === ProjectStatus.Deleted
+            ),
+        [projects]
+    );
+    const pending = useMemo(
+        () =>
+            projects.filter(
+                project => project.status === ProjectStatus.PendingDelete
+            ),
+        [projects]
+    );
     useEffect(() => {
-        if (!deletedProjects.length) {
+        if (!pending.length) {
             return;
         }
         setShowSnackbar(true);
-    }, [deletedProjects]);
+    }, [pending]);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const deletedTotalSize = useMemo(
-        () => formatByBytes(sum(map(prop('size'), deletedProjects))),
-        [deletedProjects]
+        () => formatByBytes(sum(map(prop('size'), deleted))),
+        [deleted]
     );
-    const [deletedProject, setDeletedProject] = useState<ProjectData | null>();
-    const { enqueueSnackbar } = useSnackbar();
     useEffect(() => {
-        if (deletedProjects.length > maximumSnackbars) {
+        if (isEmpty(pending)) {
             return;
         }
-        deletedProjects.forEach((project) =>
+        setShowModal(true);
+    }, [pending]);
+    const { enqueueSnackbar } = useSnackbar();
+    useEffect(() => {
+        let timeoutId;
+        if (!deleted.length) {
+            return;
+        }
+        // timeoutId = setTimeout(() => {
+        //     removeProjects(deleted);
+        // }, snackBarHideDuration + 1000);
+        if (deleted.length > maximumSnackbars) {
+            return;
+        }
+        // TODO: fix issue here snack bar not show for more than 3!!
+        const show = differenceWith(eqBy(prop('path')), showedSnackbar, deleted);
+        show.forEach(project =>
             enqueueSnackbar(
                 `successfully deleted ${
                     project.name
                 } (freed space: ${formatByBytes(project.size)})`,
                 {
-                    variant: 'success',
+                    variant: 'success'
                 }
             )
         );
-    }, [deletedProjects]);
+        setShowedSnackbar(deleted);
+        return () => clearTimeout(timeoutId);
+    }, [deleted, showedSnackbar]);
 
-    function handleDeleteProject() {
-
-        // if (project === null) {
-        //     return;
-        // }
-        // setDeletedProject(project);
-    }
     const message =
-        deletedProjects.length > 1
-            ? `Successfully deleted ${deletedProjects.length} projects`
+        deleted.length > 1
+            ? `Successfully deleted ${deleted.length} projects`
             : 'Successfully deleted projects: ';
     return (
         <>
             <Snackbar
-                onClose={() => setShowSnackbar(false)}
-                open={showSnackbar && deletedProjects.length > maximumSnackbars}
+                onClose={() => {
+                    setShowSnackbar(false);
+                }}
+                open={showSnackbar && deleted.length > maximumSnackbars}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                autoHideDuration={4000}
+                autoHideDuration={snackBarHideDuration}
             >
                 <MuiAlert elevation={6} variant="filled" severity={'success'}>
                     <Typography
@@ -90,20 +116,27 @@ export const Popups: React.FC<Props> = ({
             </Snackbar>
             <DeleteProjectsDialog
                 handleModalClosed={() => {
-                    setDeletedProject(null);
+                    setShowModal(false);
+                    updateProjectsStatus({
+                        updatedProjects: pending,
+                        status: ProjectStatus.Active
+                    });
                 }}
-                visible={!!deletedProject}
+                visible={showModal}
                 agreeMessage={
-                    deletedProjects.length > 1
+                    pending.length > 1
                         ? 'Deleting projects...'
-                        : `Deleting project ${head(deletedProjects)?.name}`
+                        : `Deleting project ${head(pending)?.name}`
                 }
                 agreeMessageVariant={'info'}
-                projects={deletedProject ? [deletedProject] : []}
+                projects={pending}
                 handleAgree={() => {
                     toggleAllRowsSelected(false);
-                    setDeletedProject(null);
-                    deleteProjects([deletedProject!]);
+                    setShowModal(false);
+                    if (!pending) {
+                        return;
+                    }
+                    deleteProjects(pending!);
                 }}
             />
         </>

@@ -15,17 +15,17 @@ const useStyles = makeStyles(() =>
     createStyles({
         gridRoot: {
             height: '100%',
-            width: '100%',
+            width: '100%'
         },
         containerRoot: {
-            height: '100%',
+            height: '100%'
         },
         settingsContainer: {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            minHeight: '135px',
-        },
+            minHeight: '135px'
+        }
     })
 );
 
@@ -40,7 +40,7 @@ export default function Home({ drives }: Props) {
     const [directories, setDirectories] = useState<string[]>([]);
     const [scan, setScan] = useState<Scan>({
         type: ScanType.All,
-        title: 'All',
+        title: 'All'
     });
     useEffect(() => {
         const dirs = drives.map(({ path }) => path);
@@ -60,17 +60,17 @@ export default function Home({ drives }: Props) {
         return [
             {
                 type: ScanType.All,
-                title: 'All',
+                title: 'All'
             },
             {
                 type: ScanType.Folder,
-                title: 'Folder',
+                title: 'Folder'
             },
             {
                 type: ScanType.Drives,
                 title: 'Drives',
-                visible: drives.length > 1,
-            },
+                visible: drives.length > 1
+            }
         ];
     }, [drives]);
 
@@ -87,19 +87,20 @@ export default function Home({ drives }: Props) {
     }
 
     const shouldDisableScan =
-        isWindows && scan.type === ScanType.All && !directories.length;
+        (isWindows && scan.type === ScanType.All && !directories.length) ||
+        !drives.length;
 
     return (
         <Container
             maxWidth={false}
             disableGutters
             classes={{
-                root: classes.containerRoot,
+                root: classes.containerRoot
             }}
         >
             <Grid
                 classes={{
-                    root: classes.gridRoot,
+                    root: classes.gridRoot
                 }}
                 container
                 direction="column"
@@ -131,26 +132,3 @@ export default function Home({ drives }: Props) {
         </Container>
     );
 }
-/**
- * if (scan.type === ScanType.All) {
-        setState(drives);
-        return null;
-    }
- if (scan.type === ScanType.Folder) {
-        return (
-            <FolderInput
-                onChange={folder => setState([folder])}
-                directory={head(directories)!}
-            />
-        );
-    }
- if (scan.type === ScanType.Drives) {
-        return (
-            <DriveSelector
-                drives={drives}
-                selectedDrives={selectedDrives}
-                onChange={drives => setState(drives)}
-            />
-        );
-    }
- */
