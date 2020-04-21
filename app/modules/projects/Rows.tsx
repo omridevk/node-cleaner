@@ -131,7 +131,10 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                 return (
                     <TableRow
                         component="div"
-                        onContextMenu={() => handleContextMenu(row.original)}
+                        onContextMenu={(e) => {
+                            e.preventDefault(0);
+                            handleContextMenu(row.original)
+                        }}
                         {...row.getRowProps()}
                         classes={{
                             root:

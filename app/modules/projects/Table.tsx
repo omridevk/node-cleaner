@@ -222,7 +222,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            {projects.length && (
+            {!!projects.length && (
                 <Popups toggleAllRowsSelected={toggleAllRowsSelected} />
             )}
         </>
