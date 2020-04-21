@@ -11,7 +11,7 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable
+    useTable,
 } from 'react-table';
 import { ProjectData } from '../../types';
 import React, {
@@ -19,7 +19,7 @@ import React, {
     useContext,
     useEffect,
     useMemo,
-    useState
+    useState,
 } from 'react';
 import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
@@ -27,7 +27,6 @@ import MaUTable from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
-import { ContextMenuState } from '../../types/ContextMenuState';
 import { Popups } from './Popups';
 import { TableHead } from './TableHead';
 import { Header } from './Header';
@@ -40,7 +39,7 @@ function fuzzyTextFilterFn(
     id: IdType<any>,
     filterValue: FilterValue
 ) {
-    return matchSorter(rows, filterValue, { keys: [row => row.values[id]] });
+    return matchSorter(rows, filterValue, { keys: [(row) => row.values[id]] });
 }
 
 interface TableProps {
@@ -58,20 +57,20 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         pauseScan,
         resetScan,
         resumeScan,
-        darkMode
+        darkMode,
     } = useContext(ProjectDataContext);
 
     const activeProjects = useMemo(
         () =>
             projects.filter(
-                project => project.status !== ProjectStatus.Deleted
+                (project) => project.status !== ProjectStatus.Deleted
             ),
         [projects]
     );
     const deletedProjects = useMemo(
         () =>
             projects.filter(
-                project => project.status === ProjectStatus.Deleted
+                (project) => project.status === ProjectStatus.Deleted
             ),
         [projects]
     );
@@ -107,7 +106,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                 id: IdType<string>,
                 filterValue: FilterValue
             ) => {
-                return rows.filter(row => {
+                return rows.filter((row) => {
                     const rowValue = row.values[id];
                     return rowValue !== undefined
                         ? String(rowValue)
@@ -115,7 +114,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                               .startsWith(String(filterValue).toLowerCase())
                         : true;
                 });
-            }
+            },
         }),
         []
     );
@@ -125,7 +124,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             width: 150,
             minWidth: 150,
             Filter: DefaultColumnFilter,
-            maxWidth: 400
+            maxWidth: 400,
         }),
         []
     );
@@ -133,8 +132,8 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         () => [
             {
                 id: 'size',
-                desc: false
-            }
+                desc: false,
+            },
         ],
         []
     );
@@ -151,7 +150,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         isAllRowsSelected,
         toggleRowSelected,
         selectedFlatRows,
-        state: { selectedRowIds, globalFilter }
+        state: { selectedRowIds, globalFilter },
     } = useTable(
         {
             autoResetSelectedRows: false,
@@ -161,11 +160,11 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
             columns,
             filterTypes,
             initialState: {
-                sortBy: defaultSortBy
+                sortBy: defaultSortBy,
             },
-            getRowId: React.useCallback(row => row.path, []),
+            getRowId: React.useCallback((row) => row.path, []),
             defaultColumn,
-            data: activeProjects
+            data: activeProjects,
         },
         useFilters,
         useGlobalFilter,
@@ -223,7 +222,9 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                     />
                 </TableBody>
             </MaUTable>
-            <Popups toggleAllRowsSelected={toggleAllRowsSelected} />
+            {projects.length && (
+                <Popups toggleAllRowsSelected={toggleAllRowsSelected} />
+            )}
         </>
     );
 }

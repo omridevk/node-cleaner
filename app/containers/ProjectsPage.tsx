@@ -16,10 +16,9 @@ export default function ProjectPage() {
     const {
         projects = [],
         state,
-        // deleteProjects,
         updateProjectsStatus,
         startScan,
-        totalSizeString
+        totalSizeString,
     } = useContext(ProjectDataContext);
     const location = useLocation<{ directories: string[] }>();
     const { scanning } = state;
@@ -28,16 +27,13 @@ export default function ProjectPage() {
     useEffect(() => {
         startScan(directories);
     }, []);
-    // directory = directory!.toString();
-    const [deleted, setDeleted] = useState<ProjectData[]>([]);
-    const [showDialog, setShowDialog] = useState(false);
     const [showSnackbar, setShowSnackbar] = useState(false);
 
     function onDeleteProjects(projects: ProjectData[]) {
-        console.log({projects});
-        updateProjectsStatus({updatedProjects: projects, status: ProjectStatus.PendingDelete});
-        // setDeleted(projects);
-        // setShowDialog(true);
+        updateProjectsStatus({
+            updatedProjects: projects,
+            status: ProjectStatus.PendingDelete,
+        });
     }
     const finished = scanning === ScanState.Finished;
 
@@ -61,26 +57,6 @@ export default function ProjectPage() {
                     {totalSizeString}
                 </Alert>
             </Snackbar>
-            {/* Delete Single project
-            TODO: find a way to have one delete project dialog modal
-            */}
-            {/*<DeleteProjectsDialog*/}
-            {/*    handleModalClosed={() => {*/}
-            {/*        setShowDialog(false);*/}
-            {/*    }}*/}
-            {/*    agreeMessage={*/}
-            {/*        deleted.length > 1*/}
-            {/*            ? 'Deleting projects...'*/}
-            {/*            : `Deleting project ${head(deleted)?.name}`*/}
-            {/*    }*/}
-            {/*    agreeMessageVariant={'info'}*/}
-            {/*    visible={showDialog}*/}
-            {/*    projects={deleted}*/}
-            {/*    handleAgree={() => {*/}
-            {/*        setShowDialog(false);*/}
-            {/*        deleteProjects(deleted);*/}
-            {/*    }}*/}
-            {/*/>*/}
             <Projects onDeleteProjects={onDeleteProjects} />
         </>
     );
