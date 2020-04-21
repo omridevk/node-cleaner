@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React from 'react';
 import { FilterValue, Hooks, IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
@@ -172,7 +172,6 @@ export const defaultColumns = [
     }
 ];
 
-
 export const extraColumns = ({
     onDeleteRow,
     hooks
@@ -244,8 +243,10 @@ export const extraColumns = ({
                                             ProjectStatus.Deleting && (
                                             <BlueProgress />
                                         )}
-                                        {original.status ===
-                                            ProjectStatus.Active && (
+                                        {[
+                                            ProjectStatus.Active,
+                                            ProjectStatus.PendingDelete
+                                        ].includes(original.status) && (
                                             <DeleteIcon />
                                         )}
                                     </IconButton>

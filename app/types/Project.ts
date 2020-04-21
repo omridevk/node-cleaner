@@ -2,7 +2,7 @@ export enum ProjectStatus {
     Active = 'active',
     Deleted = 'deleted',
     Deleting = 'deleting',
-    Calculating = 'calculating'
+    PendingDelete = 'pending-delete'
 }
 
 export interface ProjectData {

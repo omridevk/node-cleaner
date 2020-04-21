@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -7,6 +7,8 @@ import { IdType, Row } from 'react-table';
 import { ProjectData } from '../../types';
 import Alert from '@material-ui/lab/Alert';
 import { ProjectStatus } from '../../types/Project';
+import { clipboard, remote, shell } from 'electron';
+import { ProjectDataContext } from '../../containers/Root';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -23,38 +25,86 @@ interface RowsProps {
     rows: Array<Row<ProjectData>>;
     toggleRowSelected: (rowId: IdType<ProjectData>, set?: boolean) => void;
     prepareRow: (row: Row<ProjectData>) => void;
-    handleContextMenuOpen: (data: {
-        project: ProjectData;
-        mouseX: null | number;
-        mouseY: null | number;
+    isAllRowsSelected: boolean;
+    toggleAllRowsSelected: (value?: boolean) => void;
+}
+const { Menu } = remote;
+
+interface CreateContextMenuProps {
+    project: ProjectData;
+    toggleAllRowsSelected: (value?: boolean) => void;
+    isAllRowsSelected: boolean;
+    updateProjectsStatus: ({
+        updatedProjects,
+        status
+    }: {
+        updatedProjects: ProjectData[];
+        status: ProjectStatus;
     }) => void;
 }
 
+const createContextMenu = ({
+    project,
+    updateProjectsStatus,
+    isAllRowsSelected,
+    toggleAllRowsSelected
+}: CreateContextMenuProps) => {
+    const template = [
+        {
+            label: 'Open',
+            click() {
+                shell.openItem(project.path);
+            }
+        },
+        {
+            label: 'Copy project path to clipboard',
+            click() {
+                clipboard.writeText(project.path);
+            }
+        },
+        {
+            label: isAllRowsSelected ? `Deselect All` : `Select All`,
+            click() {
+                toggleAllRowsSelected();
+            }
+        },
+        {
+            label: `Delete`,
+            click() {
+                // todo delete project
+                updateProjectsStatus({
+                    updatedProjects: [project],
+                    status: ProjectStatus.PendingDelete
+                });
+            },
+            enabled: project.status !== ProjectStatus.Deleting
+        }
+    ];
+    return Menu.buildFromTemplate(template);
+};
+
 // @ts-ignore
 export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef(
-    ({ rows, prepareRow, toggleRowSelected, handleContextMenuOpen }, _) => {
+    (
         {
-            const handleContextMenu = (
-                event: React.MouseEvent<HTMLDivElement>,
-                row: Row<ProjectData>
-            ) => {
-                const { original: project } = row;
-                if (project.status === ProjectStatus.Deleting) {
-                    return;
-                }
-                event.preventDefault();
-                handleContextMenuOpen({
-                    mouseX: event.clientX - 2,
-                    mouseY: event.clientY - 4,
-                    project
+            rows,
+            prepareRow,
+            toggleRowSelected,
+            toggleAllRowsSelected,
+            isAllRowsSelected
+        },
+        _
+    ) => {
+        const { updateProjectsStatus } = useContext(ProjectDataContext);
+        {
+            const handleContextMenu = (project: ProjectData) => {
+                const menu = createContextMenu({
+                    project,
+                    isAllRowsSelected,
+                    updateProjectsStatus,
+                    toggleAllRowsSelected
                 });
-                // clear selection when opening
-                // context menu
-                const selection = window.getSelection();
-                if (selection === null) {
-                    return;
-                }
-                selection.empty();
+                menu.popup({ window: remote.getCurrentWindow() });
             };
 
             const classes = useStyles();
@@ -81,7 +131,10 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                 return (
                     <TableRow
                         component="div"
-                        onContextMenu={event => handleContextMenu(event, row)}
+                        onContextMenu={(e) => {
+                            e.preventDefault(0);
+                            handleContextMenu(row.original)
+                        }}
                         {...row.getRowProps()}
                         classes={{
                             root:
@@ -89,7 +142,10 @@ export const Rows: React.ForwardRefExoticComponent<RowsProps> = React.forwardRef
                                     ? ''
                                     : classes.rowRoot
                         }}
-                        onClick={() => handleRowClicked(row)}
+                        onClick={e => {
+                            e.preventDefault();
+                            handleRowClicked(row);
+                        }}
                     >
                         {row.cells.map(cell => {
                             return (

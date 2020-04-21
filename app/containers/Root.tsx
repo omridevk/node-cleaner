@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { hot } from 'react-hot-loader/root';
 import { Provider } from 'react-redux';
 import { History } from 'history';
@@ -15,6 +15,8 @@ import { SnackbarProvider } from 'notistack';
 import { maximumSnackbars } from '../constants';
 import { ipcRenderer } from 'electron';
 import { Messages } from '../enums/messages';
+import { ProjectStatus } from '../types/Project';
+import { Finder } from '../utils/finder';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -24,6 +26,7 @@ const defaultContext = {
     foldersScanned: 0,
     deletedProjects: [],
     resetScan: noop,
+    updateProjectsStatus: noop,
     startScan: (_: any) => {},
     totalSpace: { free: '', size: '' },
     pauseScan: noop,
@@ -31,7 +34,7 @@ const defaultContext = {
     deleteProjects: noop,
     resumeScan: noop,
     currentFolder: '',
-    drives: [],
+    drives: []
 };
 
 export const ProjectDataContext = React.createContext<{
@@ -40,6 +43,13 @@ export const ProjectDataContext = React.createContext<{
     foldersScanned: number;
     totalSpace: { free: string; size: string };
     toggleDarkMode: () => void;
+    updateProjectsStatus: ({
+        updatedProjects,
+        status
+    }: {
+        updatedProjects: ProjectData[];
+        status: ProjectStatus;
+    }) => void;
     deletedProjects: ProjectData[];
     resetScan: () => void;
     deleteProjects: (projects: ProjectData[]) => void;
@@ -61,25 +71,30 @@ type Props = {
 
 const darkTheme = createMuiTheme({
     palette: {
-        type: 'dark',
-    },
+        type: 'dark'
+    }
 });
 const theme = createMuiTheme({
     palette: {
-        primary: blue,
-    },
+        primary: blue
+    }
 });
 
-const Root = ({ store, history, useDarkMode = false}: Props) => {
+const Root = ({ store, history, useDarkMode = false }: Props) => {
     const [darkMode, setDarkMode] = useState(useDarkMode);
+
+    const finder = useMemo(() => {
+        return new Finder();
+    }, []);
+
     useEffect(() => {
         function onChangeTheme(_, darkMode: boolean) {
             setDarkMode(darkMode);
         }
         ipcRenderer.on(Messages.CHANGE_THEME, onChangeTheme);
         return () => {
-            ipcRenderer.off(Messages.CHANGE_THEME, onChangeTheme)
-        }
+            ipcRenderer.off(Messages.CHANGE_THEME, onChangeTheme);
+        };
     }, []);
     const {
         projects,
@@ -91,11 +106,12 @@ const Root = ({ store, history, useDarkMode = false}: Props) => {
         resetScan,
         deleteProjects,
         foldersScanned,
+        updateProjectsStatus,
         deletedProjects,
         state,
         drives,
-        totalSizeString,
-    } = useScan();
+        totalSizeString
+    } = useScan(finder);
 
     return (
         <>
@@ -111,16 +127,17 @@ const Root = ({ store, history, useDarkMode = false}: Props) => {
                                 foldersScanned,
                                 darkMode,
                                 resumeScan,
+                                updateProjectsStatus,
                                 startScan,
                                 deleteProjects,
                                 deletedProjects,
                                 stopScan,
                                 pauseScan,
                                 toggleDarkMode: () =>
-                                    setDarkMode((prevState) => !prevState),
+                                    setDarkMode(prevState => !prevState),
                                 projects,
                                 state,
-                                totalSizeString,
+                                totalSizeString
                             }}
                         >
                             <Provider store={store}>

@@ -1,4 +1,4 @@
-import { BehaviorSubject, from, Observable } from 'rxjs';
+import { BehaviorSubject, from, Observable, ReplaySubject } from 'rxjs';
 import { performance } from 'perf_hooks';
 import fs from 'fs-extra';
 import path from 'path';
@@ -61,6 +61,10 @@ export class Finder {
     private _projects = new BehaviorSubject<ProjectData[]>([]);
 
     public projects$ = this._projects.asObservable();
+
+    private _project = new ReplaySubject<ProjectData>(Number.POSITIVE_INFINITY, 2000);
+
+    public project$ = this._project.asObservable();
 
     private _foldersScanned = new BehaviorSubject<number>(0);
 
@@ -234,6 +238,7 @@ export class Finder {
                     )
                 ),
                 tap((project: ProjectData) => {
+                    this._project.next(project);
                     this.updateProjects([project]);
                 }),
                 take(1)

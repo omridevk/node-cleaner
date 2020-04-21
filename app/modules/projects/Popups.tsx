@@ -1,10 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { ContextMenu } from '../../common/ContextMenu';
 import DeleteProjectsDialog from './DeleteProjectsDialog';
-import { ContextMenuState } from '../../types/ContextMenuState';
-import { isDarwin, maximumSnackbars } from '../../constants';
-import { shell } from 'electron';
-import { ProjectData } from '../../types';
+import { maximumSnackbars } from '../../constants';
 import { ProjectDataContext } from '../../containers/Root';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -13,39 +9,60 @@ import { formatByBytes } from '../../utils/helpers';
 import sum from 'ramda/src/sum';
 import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
-import { ProjectStatus } from '../../types/Project';
+import { ProjectData, ProjectStatus } from '../../types/Project';
 import { useSnackbar } from 'notistack';
-import { head } from 'ramda';
-import { clipboard } from 'electron';
+import { differenceWith, eqBy, head, isEmpty, uniq } from 'ramda';
 
 interface Props {
-    contextMenuState: ContextMenuState;
     toggleAllRowsSelected: (value?: boolean) => void;
 }
 
-export const Popups: React.FC<Props> = ({
-    contextMenuState,
-    toggleAllRowsSelected,
-}) => {
-    const { deleteProjects, deletedProjects } = useContext(ProjectDataContext);
-    useEffect(() => {
-        if (!deletedProjects.length) {
-            return;
-        }
-        setShowSnackbar(true);
-    }, [deletedProjects]);
+const snackBarHideDuration = 4000;
+
+export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
+    const {
+        deleteProjects,
+        projects = [],
+        updateProjectsStatus,
+    } = useContext(ProjectDataContext);
+    const [showModal, setShowModal] = useState(false);
+    const [showedProjects, setShowedProjects] = useState<ProjectData[]>([]);
     const [showSnackbar, setShowSnackbar] = useState(false);
-    const deletedTotalSize = useMemo(
-        () => formatByBytes(sum(map(prop('size'), deletedProjects))),
-        [deletedProjects]
+    const deleted = useMemo(
+        () =>
+            projects.filter(
+                (project) => project.status === ProjectStatus.Deleted
+            ),
+        [projects]
     );
-    const [deletedProject, setDeletedProject] = useState<ProjectData | null>();
-    const { enqueueSnackbar } = useSnackbar();
+    const pending = useMemo(
+        () =>
+            projects.filter(
+                (project) => project.status === ProjectStatus.PendingDelete
+            ),
+        [projects]
+    );
+    const deletedTotalSize = useMemo(
+        () => formatByBytes(sum(map(prop('size'), deleted))),
+        [deleted]
+    );
     useEffect(() => {
-        if (deletedProjects.length > maximumSnackbars) {
+        if (isEmpty(pending)) {
             return;
         }
-        deletedProjects.forEach((project) =>
+        setShowModal(true);
+    }, [pending]);
+    const { enqueueSnackbar } = useSnackbar();
+    const toShow = useMemo(() => {
+        return differenceWith(eqBy(prop('path')), deleted, showedProjects);
+    }, [deleted]);
+    useEffect(() => {
+        setShowedProjects((projects) => uniq([...projects, ...toShow]));
+        if (toShow.length > maximumSnackbars) {
+            setShowSnackbar(true);
+            return;
+        }
+        toShow.forEach((project) => {
             enqueueSnackbar(
                 `successfully deleted ${
                     project.name
@@ -53,65 +70,24 @@ export const Popups: React.FC<Props> = ({
                 {
                     variant: 'success',
                 }
-            )
-        );
-    }, [deletedProjects]);
+            );
+        });
+    }, [toShow]);
 
-    function handleDeleteProject() {
-        const { project } = contextMenuState;
-        if (project === null) {
-            return;
-        }
-        setDeletedProject(project);
-    }
-    function handleOpenPath() {
-        const { project } = contextMenuState;
-        if (!project?.path) {
-            return;
-        }
-        shell.openItem(project?.path);
-    }
-
-    const contextMenuItems = useMemo(() => {
-        const { project } = contextMenuState;
-        const menu = [
-            {
-                text: `Open in ${isDarwin ? 'finder' : 'file explorer'}`,
-                action: handleOpenPath,
-            },
-            {
-                text: 'Copy path to clipboard',
-                action: () => {
-                    const { project } = contextMenuState;
-                    if (!project) {
-                        return;
-                    }
-                    clipboard.writeText(project.path);
-                },
-            },
-        ];
-        if (project?.status === ProjectStatus.Deleting) {
-            return menu;
-        }
-        return [
-            ...menu,
-            {
-                text: 'Delete',
-                action: handleDeleteProject,
-            },
-        ];
-    }, [contextMenuState]);
     const message =
-        deletedProjects.length > 1
-            ? `Successfully deleted ${deletedProjects.length} projects`
+        toShow.length > 1
+            ? `Successfully deleted ${toShow.length} projects`
             : 'Successfully deleted projects: ';
     return (
         <>
             <Snackbar
-                onClose={() => setShowSnackbar(false)}
-                open={showSnackbar && deletedProjects.length > maximumSnackbars}
+                onClose={() => {
+                    console.log('here???');
+                    setShowSnackbar(false);
+                }}
+                open={showSnackbar}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                autoHideDuration={4000}
+                autoHideDuration={snackBarHideDuration}
             >
                 <MuiAlert elevation={6} variant="filled" severity={'success'}>
                     <Typography
@@ -126,28 +102,33 @@ export const Popups: React.FC<Props> = ({
                     </Typography>
                 </MuiAlert>
             </Snackbar>
-            <ContextMenu
-                items={contextMenuItems}
-                mouseX={contextMenuState.mouseX}
-                mouseY={contextMenuState.mouseY}
-                project={contextMenuState.project}
-            />
             <DeleteProjectsDialog
                 handleModalClosed={() => {
-                    setDeletedProject(null);
+                    setShowModal(false);
+                    updateProjectsStatus({
+                        updatedProjects: pending,
+                        status: ProjectStatus.Active,
+                    });
                 }}
-                visible={!!deletedProject}
+                visible={showModal}
                 agreeMessage={
-                    deletedProjects.length > 1
+                    pending.length > 1
                         ? 'Deleting projects...'
-                        : `Deleting project ${head(deletedProjects)?.name}`
+                        : `Deleting project ${head(pending)?.name}`
                 }
                 agreeMessageVariant={'info'}
-                projects={deletedProject ? [deletedProject] : []}
+                projects={pending}
                 handleAgree={() => {
                     toggleAllRowsSelected(false);
-                    setDeletedProject(null);
-                    deleteProjects([deletedProject!]);
+                    updateProjectsStatus({
+                        updatedProjects: pending,
+                        status: ProjectStatus.Deleted,
+                    });
+                    setShowModal(false);
+                    if (!pending) {
+                        return;
+                    }
+                    deleteProjects(pending!);
                 }}
             />
         </>
