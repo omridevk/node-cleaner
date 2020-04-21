@@ -1,7 +1,7 @@
 {
     "name": "node-cleaner",
     "productName": "Node Cleaner",
-    "version": "0.0.2-master",
+    "version": "0.0.2",
     "description": "Application to clean unused node_modules folders to free up space.",
     "main": "./main.prod.js",
     "author": {
