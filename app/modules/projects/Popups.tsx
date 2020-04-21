@@ -11,7 +11,7 @@ import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
 import { ProjectData, ProjectStatus } from '../../types/Project';
 import { useSnackbar } from 'notistack';
-import { differenceWith, eqBy, head, isEmpty } from 'ramda';
+import { differenceWith, eqBy, head, isEmpty, uniq } from 'ramda';
 
 interface Props {
     toggleAllRowsSelected: (value?: boolean) => void;
@@ -24,31 +24,24 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
         deleteProjects,
         projects = [],
         updateProjectsStatus,
-        removeProjects
     } = useContext(ProjectDataContext);
     const [showModal, setShowModal] = useState(false);
-    const [showedSnackbar, setShowedSnackbar] = useState<ProjectData[]>([]);
+    const [showedProjects, setShowedProjects] = useState<ProjectData[]>([]);
+    const [showSnackbar, setShowSnackbar] = useState(false);
     const deleted = useMemo(
         () =>
             projects.filter(
-                project => project.status === ProjectStatus.Deleted
+                (project) => project.status === ProjectStatus.Deleted
             ),
         [projects]
     );
     const pending = useMemo(
         () =>
             projects.filter(
-                project => project.status === ProjectStatus.PendingDelete
+                (project) => project.status === ProjectStatus.PendingDelete
             ),
         [projects]
     );
-    useEffect(() => {
-        if (!pending.length) {
-            return;
-        }
-        setShowSnackbar(true);
-    }, [pending]);
-    const [showSnackbar, setShowSnackbar] = useState(false);
     const deletedTotalSize = useMemo(
         () => formatByBytes(sum(map(prop('size'), deleted))),
         [deleted]
@@ -60,44 +53,39 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
         setShowModal(true);
     }, [pending]);
     const { enqueueSnackbar } = useSnackbar();
+    const toShow = useMemo(() => {
+        return differenceWith(eqBy(prop('path')), deleted, showedProjects);
+    }, [deleted]);
     useEffect(() => {
-        let timeoutId;
-        if (!deleted.length) {
+        setShowedProjects((projects) => uniq([...projects, ...toShow]));
+        if (toShow.length > maximumSnackbars) {
+            setShowSnackbar(true);
             return;
         }
-        // timeoutId = setTimeout(() => {
-        //     removeProjects(deleted);
-        // }, snackBarHideDuration + 1000);
-        if (deleted.length > maximumSnackbars) {
-            return;
-        }
-        // TODO: fix issue here snack bar not show for more than 3!!
-        const show = differenceWith(eqBy(prop('path')), showedSnackbar, deleted);
-        show.forEach(project =>
+        toShow.forEach((project) => {
             enqueueSnackbar(
                 `successfully deleted ${
                     project.name
                 } (freed space: ${formatByBytes(project.size)})`,
                 {
-                    variant: 'success'
+                    variant: 'success',
                 }
-            )
-        );
-        setShowedSnackbar(deleted);
-        return () => clearTimeout(timeoutId);
-    }, [deleted, showedSnackbar]);
+            );
+        });
+    }, [toShow]);
 
     const message =
-        deleted.length > 1
-            ? `Successfully deleted ${deleted.length} projects`
+        toShow.length > 1
+            ? `Successfully deleted ${toShow.length} projects`
             : 'Successfully deleted projects: ';
     return (
         <>
             <Snackbar
                 onClose={() => {
+                    console.log('here???');
                     setShowSnackbar(false);
                 }}
-                open={showSnackbar && deleted.length > maximumSnackbars}
+                open={showSnackbar}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                 autoHideDuration={snackBarHideDuration}
             >
@@ -119,7 +107,7 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
                     setShowModal(false);
                     updateProjectsStatus({
                         updatedProjects: pending,
-                        status: ProjectStatus.Active
+                        status: ProjectStatus.Active,
                     });
                 }}
                 visible={showModal}
@@ -132,6 +120,10 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
                 projects={pending}
                 handleAgree={() => {
                     toggleAllRowsSelected(false);
+                    updateProjectsStatus({
+                        updatedProjects: pending,
+                        status: ProjectStatus.Deleted,
+                    });
                     setShowModal(false);
                     if (!pending) {
                         return;

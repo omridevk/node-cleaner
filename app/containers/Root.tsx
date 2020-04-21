@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { hot } from 'react-hot-loader/root';
 import { Provider } from 'react-redux';
 import { History } from 'history';
@@ -16,6 +16,7 @@ import { maximumSnackbars } from '../constants';
 import { ipcRenderer } from 'electron';
 import { Messages } from '../enums/messages';
 import { ProjectStatus } from '../types/Project';
+import { Finder } from '../utils/finder';
 
 const defaultContext = {
     state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
@@ -26,7 +27,6 @@ const defaultContext = {
     deletedProjects: [],
     resetScan: noop,
     updateProjectsStatus: noop,
-    removeProjects: noop,
     startScan: (_: any) => {},
     totalSpace: { free: '', size: '' },
     pauseScan: noop,
@@ -51,7 +51,6 @@ export const ProjectDataContext = React.createContext<{
         status: ProjectStatus;
     }) => void;
     deletedProjects: ProjectData[];
-    removeProjects: (projects: ProjectData[] | ProjectData) => void;
     resetScan: () => void;
     deleteProjects: (projects: ProjectData[]) => void;
     darkMode: boolean;
@@ -83,6 +82,11 @@ const theme = createMuiTheme({
 
 const Root = ({ store, history, useDarkMode = false }: Props) => {
     const [darkMode, setDarkMode] = useState(useDarkMode);
+
+    const finder = useMemo(() => {
+        return new Finder();
+    }, []);
+
     useEffect(() => {
         function onChangeTheme(_, darkMode: boolean) {
             setDarkMode(darkMode);
@@ -101,14 +105,13 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
         totalSpace,
         resetScan,
         deleteProjects,
-        removeProjects,
         foldersScanned,
         updateProjectsStatus,
         deletedProjects,
         state,
         drives,
         totalSizeString
-    } = useScan();
+    } = useScan(finder);
 
     return (
         <>
@@ -120,7 +123,6 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
                             value={{
                                 drives,
                                 totalSpace,
-                                removeProjects,
                                 resetScan,
                                 foldersScanned,
                                 darkMode,
