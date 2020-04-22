@@ -101,6 +101,13 @@ export const useScan = () => {
     const folders = useRef<string | string[]>();
     const [deletedProjects, setDeletedProjects] = useState<ProjectData[]>([]);
     const [drives, setDrives] = useState<Drive[]>([]);
+    const deleteCommand = useMemo(() => {
+        if (isWin) {
+            return 'deltree';
+        }
+        return 'rm -rf';
+    }, []);
+
     const [state, dispatch] = useReducer(reducer, {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle,
@@ -174,19 +181,11 @@ export const useScan = () => {
                     )}`
                 )
             );
-
-            const command = useMemo(() => {
-                if (isWin) {
-                    return 'deltree';
-                }
-                return 'rm -rf';
-            }, []);
-
             forkJoin(
                 demoMode
                     ? from([0]).pipe(delay(5000))
                     : paths.map(
-                          (path) => bindNodeCallback(exec)(`${command} "${path}"`)
+                          (path) => bindNodeCallback(exec)(`${deleteCommand} "${path}"`)
                           // rimraf$(`${path}`).pipe(
                           //     catchError((e) => {
                           //         console.error(e);
