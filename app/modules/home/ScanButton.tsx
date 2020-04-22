@@ -1,4 +1,4 @@
-import { routes } from '../../constants';
+import { Routes } from '../../constants';
 import { createStyles } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
@@ -111,7 +111,7 @@ export const ScanButton = ({
                 onClick={handleClick}
                 aria-disabled={disabled ? 'true' : 'false'}
                 to={{
-                    pathname: routes.PROJECTS,
+                    pathname: Routes.PROJECTS,
                     state: {
                         directories,
                     },

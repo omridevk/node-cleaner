@@ -7,6 +7,10 @@ import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import { useLocation } from 'react-router';
 import { ScanState } from '../hooks/useScan';
 import { ProjectStatus } from '../types/Project';
+import { routes } from '../constants';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import { Link } from 'react-router-dom';
 
 const Alert = (props: AlertProps) => (
     <MuiAlert elevation={6} variant="filled" {...props} />
@@ -16,15 +20,21 @@ export default function ProjectPage() {
     const {
         projects = [],
         state,
+        fetchLocalData,
         updateProjectsStatus,
         startScan,
         totalSizeString,
     } = useContext(ProjectDataContext);
-    const location = useLocation<{ directories: string[] }>();
+    const location = useLocation<{ directories: string[], history: boolean}>();
     const { scanning } = state;
 
-    let directories = location.state.directories;
+    const directories = location.state.directories;
+    const showHistory = location.state.history;
     useEffect(() => {
+        if (showHistory) {
+            fetchLocalData();
+            return;
+        }
         startScan(directories);
     }, []);
     const [showSnackbar, setShowSnackbar] = useState(false);

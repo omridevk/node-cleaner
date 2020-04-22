@@ -1,5 +1,12 @@
 import { Finder } from '../utils/finder';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+} from 'react';
 import { ProjectData } from '../types';
 import { catchError, delay, first, map, tap } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
@@ -12,16 +19,19 @@ import { useCalculateSize } from './useCalculateSize';
 import * as logger from 'electron-log';
 import { formatByBytes, sumBy } from '../utils/helpers';
 import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
+import ElectronStore from 'electron-store';
 import {
     compose,
     differenceWith,
     eqBy,
+    filter, isEmpty,
     prop,
     propEq,
     unionWith,
     uniq,
-    uniqWith,
+    uniqWith
 } from 'ramda';
+import { subscribeToResult } from 'rxjs/internal-compatibility';
 
 export enum ScanState {
     Loading = 'loading',
@@ -88,17 +98,20 @@ function reducer(state: State, action: any): State {
 
 const demoMode = !!process.env.DEMO_MODE;
 
-export const useScan = (finder: Finder) => {
+export const useScan = (finder: Finder, electronStore: ElectronStore) => {
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [foldersScanned, setFoldersScanned] = useState(0);
     const [totalSpace, setTotalSpace] = useState({ free: '', size: '' });
     const folders = useRef<string | string[]>();
-    const [deletedProjects, setDeletedProjects] = useState<ProjectData[]>([]);
     const [drives, setDrives] = useState<Drive[]>([]);
     const [state, dispatch] = useReducer(reducer, {
         scanning: ScanState.Idle,
         deleting: DeleteState.Idle,
     });
+    const isDeleted = propEq('status', ProjectStatus.Deleted);
+    const deletedProjects = useMemo(() => filter(isDeleted, projects), [
+        projects,
+    ]);
 
     useEffect(() => {
         if (!folders.current) {
@@ -121,7 +134,9 @@ export const useScan = (finder: Finder) => {
     }, [folders.current]);
 
     const totalSizeString = useCalculateSize(projects);
-
+    const fetchLocalData = useCallback(() => {
+        setProjects(electronStore.get('deleted'));
+    },  []);
     const startScan = useCallback(
         (dir: string | string[]) => {
             finder.start(dir);
@@ -196,8 +211,22 @@ export const useScan = (finder: Finder) => {
                     (e) => logger.error(e)
                 );
         },
-        [dispatch, updateProjectsStatus, setDeletedProjects]
+        [dispatch, updateProjectsStatus]
     );
+    useEffect(() => {
+        electronStore.openInEditor();
+    }, []);
+    useEffect(() => {
+        if (isEmpty(deletedProjects)) {
+            return;
+        }
+        const history = electronStore.get('deleted', []);
+        electronStore.set(
+            'deleted',
+            uniqWith(eqBy(prop('path')), [...history, ...deletedProjects])
+        );
+
+    }, [deletedProjects]);
 
     const resetScan = useCallback(() => {
         finder.destroy();
@@ -263,8 +292,8 @@ export const useScan = (finder: Finder) => {
         startScan,
         deleteProjects,
         updateProjectsStatus,
-        deletedProjects,
         totalSizeString,
+        fetchLocalData,
         totalSpace,
         foldersScanned,
         pauseScan,

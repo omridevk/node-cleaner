@@ -8,8 +8,11 @@ import { Scan, ScanSelection, ScanType } from './ScanSelection';
 import { FolderInput } from './FolderInput';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
-import { isDarwin, isWin } from '../../constants';
+import { isDarwin, isWin, Routes } from '../../constants';
 import { isEmpty } from 'ramda';
+import { Link } from 'react-router-dom';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -112,6 +115,20 @@ export default function Home({ drives }: Props) {
                     disabled={shouldDisableScan}
                     directories={directories}
                 />
+                <Link
+                    to={{
+                        pathname: Routes.PROJECTS,
+                        state: {
+                            history: true
+                        }
+                    }}
+                >
+                    <Button variant='outlined'>
+                        <Typography variant="subtitle1">
+                            Scan
+                        </Typography>
+                    </Button>
+                </Link>
                 <div className={classes.settingsContainer}>
                     <ScanSelection
                         selectedScan={scan}
