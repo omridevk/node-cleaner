@@ -101,6 +101,17 @@ export default function Home({ drives }: Props) {
                 root: classes.containerRoot
             }}
         >
+            <Link
+                to={{
+                    pathname: Routes.HISTORY
+                }}
+            >
+                <Button variant='outlined'>
+                    <Typography variant="subtitle1">
+                        History
+                    </Typography>
+                </Button>
+            </Link>
             <Grid
                 classes={{
                     root: classes.gridRoot
@@ -115,20 +126,6 @@ export default function Home({ drives }: Props) {
                     disabled={shouldDisableScan}
                     directories={directories}
                 />
-                <Link
-                    to={{
-                        pathname: Routes.PROJECTS,
-                        state: {
-                            history: true
-                        }
-                    }}
-                >
-                    <Button variant='outlined'>
-                        <Typography variant="subtitle1">
-                            Scan
-                        </Typography>
-                    </Button>
-                </Link>
                 <div className={classes.settingsContainer}>
                     <ScanSelection
                         selectedScan={scan}

@@ -7,7 +7,7 @@ import AppBar from '@material-ui/core/AppBar';
 import withStyles from '@material-ui/core/styles/withStyles';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import { Link } from 'react-router-dom';
-import { Routes } from '../../constants';
+import { Routes } from '../constants';
 import Button from '@material-ui/core/Button';
 
 interface Props {
@@ -45,7 +45,7 @@ const BorderLinearProgress = withStyles({
     },
 })(LinearProgress);
 
-export const Header: React.FC<Props> = ({ children, title, subtitle, loading }) => {
+export const PageBar: React.FC<Props> = ({ children, title, subtitle, loading }) => {
     const classes = useStyles();
     return (
         <>

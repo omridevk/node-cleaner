@@ -20,7 +20,6 @@ export default function ProjectPage() {
     const {
         projects = [],
         state,
-        fetchLocalData,
         updateProjectsStatus,
         startScan,
         totalSizeString,
@@ -29,12 +28,7 @@ export default function ProjectPage() {
     const { scanning } = state;
 
     const directories = location.state.directories;
-    const showHistory = location.state.history;
     useEffect(() => {
-        if (showHistory) {
-            fetchLocalData();
-            return;
-        }
         startScan(directories);
     }, []);
     const [showSnackbar, setShowSnackbar] = useState(false);

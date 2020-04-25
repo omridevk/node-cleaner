@@ -4,7 +4,6 @@ import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
-import { SliderColumnFilter } from '../../common/SliderFilter';
 import { CircularProgressProps, createStyles, Theme } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
@@ -17,6 +16,7 @@ import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProjectStatus } from '../../types/Project';
+import { SliderColumnFilter } from '../../common/SliderFilter';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -173,10 +173,8 @@ export const defaultColumns = [
 ];
 
 export const extraColumns = ({
-    onDeleteRow,
     hooks
 }: {
-    onDeleteRow: (project: ProjectData) => void;
     hooks: Hooks<ProjectData>;
 }) => {
     {
@@ -236,7 +234,6 @@ export const extraColumns = ({
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            onDeleteRow(original);
                                         }}
                                     >
                                         {original.status ===

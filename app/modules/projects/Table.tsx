@@ -23,7 +23,7 @@ import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
 import { Popups } from './Popups';
 import { TableHead } from '../../common/TableHead';
-import { Header } from './Header';
+import { PageBar } from '../../common/PageBar';
 import { ScanState } from '../../hooks/useScan';
 import { useHistory } from 'react-router';
 import { ProjectStatus } from '../../types/Project';
@@ -211,7 +211,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
     // Render the UI for your table
     return (
         <>
-            <Header
+            <PageBar
                 loading={loading}
                 title={scanning ? 'Scanning' : 'Node Cleaner'}
                 subtitle={subtitle}
@@ -253,7 +253,7 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
                         {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
                     </IconButton>
                 </Tooltip>
-            </Header>
+            </PageBar>
             <Toolbar
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}

@@ -1,8 +1,6 @@
 import React from 'react';
+import { History } from '../modules/history/History';
 
 export const HistoryPage: React.FC<any> = () => {
-    console.log('here');
-    return (
-        <h2>"history Page"</h2>
-    )
+    return <History/>;
 };

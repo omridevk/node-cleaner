@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import Slider from '@material-ui/core/Slider';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { createStyles } from '@material-ui/core';
-import { ProjectData } from '../../types';
+import { ProjectData } from '../types';
 import { FilterValue, IdType, Row } from 'react-table';
-import { formatByBytes } from '../../utils/helpers';
+import { formatByBytes } from '../utils/helpers';
 import Tooltip from '@material-ui/core/Tooltip';
 
 const useStyles = makeStyles(() =>
