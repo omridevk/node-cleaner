@@ -290,7 +290,7 @@
         "devtron": "^1.4.0",
         "electron-debug": "^3.0.1",
         "electron-log": "^4.1.1",
-        "electron-updater": "^4.2.0",
+        "electron-updater": "^4.3.1",
         "history": "^4.10.1",
         "match-sorter": "^4.1.0",
         "notistack": "^0.9.11",
