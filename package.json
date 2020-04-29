@@ -309,7 +309,7 @@
         "rimraf": "^3.0.2",
         "rxjs": "^6.5.5",
         "source-map-support": "^0.5.19",
-        "sudo-prompt": "^9.1.1"
+        "sudo-prompt": "^9.2.1"
     },
     "devEngines": {
         "node": ">=7.x",
