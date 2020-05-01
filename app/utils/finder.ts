@@ -62,7 +62,10 @@ export class Finder {
 
     public projects$ = this._projects.asObservable();
 
-    private _project = new ReplaySubject<ProjectData>(Number.POSITIVE_INFINITY, 2000);
+    private _project = new ReplaySubject<ProjectData>(
+        Number.POSITIVE_INFINITY,
+        2000
+    );
 
     public project$ = this._project.asObservable();
 
@@ -207,9 +210,15 @@ export class Finder {
                     checkSize(`${path.join(entry.fullPath, 'node_modules')}`)
                 ])
             ).pipe(
-                map(([{ name, description }, { mtime }, { size }]) => ({
+                switchMap(results =>
+                    from(
+                        fs.pathExists(path.join(entry.fullPath, 'yarn.lock'))
+                    ).pipe(map(isYarn => [...results, isYarn]))
+                ),
+                map(([{ name, description }, { mtime }, { size }, isYarn]) => ({
                     size,
                     name,
+                    isYarn,
                     key: entry.fullPath,
                     status: ProjectStatus.Active,
                     description,

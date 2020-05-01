@@ -10,13 +10,14 @@ import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
+import ReplayIcon from '@material-ui/icons/Replay';
 import { isDarwin } from '../../constants';
 import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProjectStatus } from '../../types/Project';
 import { SliderColumnFilter } from '../../common/SliderFilter';
+import { exec } from 'child_process';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -173,9 +174,11 @@ export const defaultColumns = [
 ];
 
 export const extraColumns = ({
-    hooks
+    hooks,
+    onInstall
 }: {
     hooks: Hooks<ProjectData>;
+    onInstall: (project: ProjectData) => void;
 }) => {
     {
         hooks.visibleColumns.push(columns => [
@@ -218,34 +221,20 @@ export const extraColumns = ({
                         >
                             <Tooltip
                                 title={
-                                    original.status === ProjectStatus.Active
-                                        ? 'Delete'
-                                        : ''
+                                    "Install"
                                 }
                                 placement="top"
                             >
                                 <span>
                                     <IconButton
-                                        aria-label="delete"
-                                        disabled={
-                                            original.status ===
-                                            ProjectStatus.Deleting
-                                        }
+                                        aria-label="Install"
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
+                                            onInstall(original);
                                         }}
                                     >
-                                        {original.status ===
-                                            ProjectStatus.Deleting && (
-                                            <BlueProgress />
-                                        )}
-                                        {[
-                                            ProjectStatus.Active,
-                                            ProjectStatus.PendingDelete
-                                        ].includes(original.status) && (
-                                            <DeleteIcon />
-                                        )}
+                                        <ReplayIcon/>
                                     </IconButton>
                                 </span>
                             </Tooltip>

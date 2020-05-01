@@ -98,7 +98,7 @@ function reducer(state: State, action: any): State {
 
 const demoMode = !!process.env.DEMO_MODE;
 
-export const useScan = (finder: Finder, electronStore: ElectronStore) => {
+export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted": ProjectData[]}>) => {
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [foldersScanned, setFoldersScanned] = useState(0);
     const [totalSpace, setTotalSpace] = useState({ free: '', size: '' });
@@ -135,7 +135,8 @@ export const useScan = (finder: Finder, electronStore: ElectronStore) => {
 
     const totalSizeString = useCalculateSize(projects);
     const fetchLocalData = useCallback(() => {
-        setProjects(electronStore.get('deleted'));
+        finder.cancel();
+        setProjects(electronStore.get('deleted', []));
     },  []);
     const startScan = useCallback(
         (dir: string | string[]) => {

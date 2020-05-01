@@ -4,7 +4,5 @@ import { defaultColumns } from './columns';
 
 export const History: React.FC<any> = () => {
     const columns = useMemo(() => defaultColumns, []);
-    return (
-        <Table columns={columns}/>
-    )
-}
+    return <Table columns={columns} />;
+};

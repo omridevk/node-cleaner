@@ -64,6 +64,15 @@ export const PageBar: React.FC<Props> = ({ children, title, subtitle, loading })
                             <Typography variant="subtitle1">Scan</Typography>
                         </Button>
                     </Link>
+                    <Link
+                        to={{
+                            pathname: Routes.HOME,
+                        }}
+                    >
+                        <Button variant="outlined">
+                            <Typography variant="subtitle1">Home</Typography>
+                        </Button>
+                    </Link>
                     <Typography variant="h6" className={classes.title}>
                         {title}
                     </Typography>

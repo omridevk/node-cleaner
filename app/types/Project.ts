@@ -2,7 +2,8 @@ export enum ProjectStatus {
     Active = 'active',
     Deleted = 'deleted',
     Deleting = 'deleting',
-    PendingDelete = 'pending-delete'
+    PendingDelete = 'pending-delete',
+    Installing = 'installing'
 }
 
 export interface ProjectData {
@@ -11,5 +12,6 @@ export interface ProjectData {
     size: number;
     status: ProjectStatus;
     lastModified: Date | string;
+    isYarn: boolean;
     description: string;
 }
