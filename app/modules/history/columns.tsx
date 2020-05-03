@@ -17,7 +17,11 @@ import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProjectStatus } from '../../types/Project';
 import { SliderColumnFilter } from '../../common/SliderFilter';
-import { exec } from 'child_process';
+import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import DoneIcon from '@material-ui/icons/Done';
+import { BlueProgress } from '../../common/BlueProgressBar';
+import { InstallButton } from './InstallButton';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -37,52 +41,10 @@ const useStyles = makeStyles(() =>
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis'
-        }
+        },
+        iconDone: {}
     })
 );
-
-// Inspired by the Facebook spinners.
-const useStylesFacebook = makeStyles((theme: Theme) =>
-    createStyles({
-        root: {
-            position: 'relative'
-        },
-        top: {
-            color: theme.palette.grey['200']
-        },
-        bottom: {
-            color: theme.palette.primary.main,
-            animationDuration: '550ms',
-            position: 'absolute',
-            left: 0
-        }
-    })
-);
-
-function BlueProgress(props: CircularProgressProps) {
-    const classes = useStylesFacebook();
-
-    return (
-        <div className={classes.root}>
-            <CircularProgress
-                variant="determinate"
-                value={100}
-                className={classes.top}
-                size={24}
-                thickness={4}
-                {...props}
-            />
-            <CircularProgress
-                variant="indeterminate"
-                disableShrink
-                className={classes.bottom}
-                size={24}
-                thickness={4}
-                {...props}
-            />
-        </div>
-    );
-}
 
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
@@ -178,7 +140,7 @@ export const extraColumns = ({
     onInstall
 }: {
     hooks: Hooks<ProjectData>;
-    onInstall: (project: ProjectData) => void;
+    onInstall: (project: ProjectData, rowId: string) => void;
 }) => {
     {
         hooks.visibleColumns.push(columns => [
@@ -210,8 +172,9 @@ export const extraColumns = ({
             {
                 id: 'actions',
                 disableResizing: true,
+                minWidth: 200,
                 Header: () => 'Actions',
-                Cell: ({ row: { original } }) => (
+                Cell: ({ row }) => (
                     <Container>
                         <Grid
                             container
@@ -219,22 +182,37 @@ export const extraColumns = ({
                             direction="row"
                             justify="flex-end"
                         >
+                            <InstallButton
+                                project={row.original}
+                                rowId={row.id}
+                                onInstall={onInstall}
+                            />
                             <Tooltip
-                                title={
-                                    "Install"
-                                }
+                                title={row.isExpanded ? 'Minimize' : 'Expand'}
                                 placement="top"
                             >
                                 <span>
                                     <IconButton
-                                        aria-label="Install"
-                                        onClick={event => {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            onInstall(original);
+                                        aria-label={
+                                            row.isExpanded
+                                                ? 'Minimize'
+                                                : 'Expand'
+                                        }
+                                        disabled={
+                                            row.original.status ===
+                                            ProjectStatus.Deleted
+                                        }
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            row.toggleRowExpanded();
                                         }}
                                     >
-                                        <ReplayIcon/>
+                                        {row.isExpanded ? (
+                                            <ExpandMoreIcon />
+                                        ) : (
+                                            <ExpandLessIcon />
+                                        )}
                                     </IconButton>
                                 </span>
                             </Tooltip>
@@ -250,7 +228,7 @@ export const extraColumns = ({
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            shell.openItem(original.path);
+                                            shell.openItem(row.original.path);
                                         }}
                                     >
                                         <FolderOpenIcon />

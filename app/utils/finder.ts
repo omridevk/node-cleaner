@@ -28,6 +28,7 @@ import * as log from 'electron-log';
 import { unionWith } from 'ramda';
 import { eqBy } from 'ramda';
 import { prop } from 'ramda';
+import md5 from 'blueimp-md5';
 const logger = log.scope('finder');
 
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
@@ -224,6 +225,10 @@ export class Finder {
                     description,
                     lastModified: mtime,
                     path: entry.fullPath
+                })),
+                map(project => ({
+                    ...project,
+                    id: md5(JSON.stringify(project))
                 }))
             );
 

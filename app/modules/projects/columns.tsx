@@ -17,6 +17,7 @@ import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProjectStatus } from '../../types/Project';
+import { BlueProgress } from '../../common/BlueProgressBar';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -40,48 +41,6 @@ const useStyles = makeStyles(() =>
     })
 );
 
-// Inspired by the Facebook spinners.
-const useStylesFacebook = makeStyles((theme: Theme) =>
-    createStyles({
-        root: {
-            position: 'relative'
-        },
-        top: {
-            color: theme.palette.grey['200']
-        },
-        bottom: {
-            color: theme.palette.primary.main,
-            animationDuration: '550ms',
-            position: 'absolute',
-            left: 0
-        }
-    })
-);
-
-function BlueProgress(props: CircularProgressProps) {
-    const classes = useStylesFacebook();
-
-    return (
-        <div className={classes.root}>
-            <CircularProgress
-                variant="determinate"
-                value={100}
-                className={classes.top}
-                size={24}
-                thickness={4}
-                {...props}
-            />
-            <CircularProgress
-                variant="indeterminate"
-                disableShrink
-                className={classes.bottom}
-                size={24}
-                thickness={4}
-                {...props}
-            />
-        </div>
-    );
-}
 
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter

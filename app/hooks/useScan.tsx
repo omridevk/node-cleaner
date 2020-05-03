@@ -5,7 +5,7 @@ import {
     useMemo,
     useReducer,
     useRef,
-    useState,
+    useState
 } from 'react';
 import { ProjectData } from '../types';
 import { catchError, delay, first, map, tap } from 'rxjs/operators';
@@ -22,9 +22,11 @@ import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
 import ElectronStore from 'electron-store';
 import {
     compose,
+    difference,
     differenceWith,
     eqBy,
-    filter, isEmpty,
+    filter,
+    isEmpty,
     prop,
     propEq,
     unionWith,
@@ -36,13 +38,13 @@ import { subscribeToResult } from 'rxjs/internal-compatibility';
 export enum ScanState {
     Loading = 'loading',
     Finished = 'finished',
-    Idle = 'idle',
+    Idle = 'idle'
 }
 
 export enum DeleteState {
     Deleting = 'deleting',
     Idle = 'idle',
-    Finished = 'finished',
+    Finished = 'finished'
 }
 
 export interface State {
@@ -56,7 +58,7 @@ enum Actions {
     FinishedScan,
     Reset,
     DeleteProjects,
-    FinishedDelete,
+    FinishedDelete
 }
 
 function reducer(state: State, action: any): State {
@@ -64,32 +66,32 @@ function reducer(state: State, action: any): State {
         case Actions.Reset:
             return {
                 scanning: ScanState.Idle,
-                deleting: DeleteState.Idle,
+                deleting: DeleteState.Idle
             };
         case Actions.StartScan:
             return {
                 ...state,
-                scanning: ScanState.Loading,
+                scanning: ScanState.Loading
             };
         case Actions.PauseScan:
             return {
                 ...state,
-                scanning: ScanState.Idle,
+                scanning: ScanState.Idle
             };
         case Actions.FinishedScan:
             return {
                 ...state,
-                scanning: ScanState.Finished,
+                scanning: ScanState.Finished
             };
         case Actions.DeleteProjects:
             return {
                 ...state,
-                deleting: DeleteState.Deleting,
+                deleting: DeleteState.Deleting
             };
         case Actions.FinishedDelete:
             return {
                 ...state,
-                deleting: DeleteState.Finished,
+                deleting: DeleteState.Finished
             };
         default:
             throw new Error();
@@ -98,7 +100,10 @@ function reducer(state: State, action: any): State {
 
 const demoMode = !!process.env.DEMO_MODE;
 
-export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted": ProjectData[]}>) => {
+export const useScan = (
+    finder: Finder,
+    electronStore: ElectronStore<{ deleted: ProjectData[] }>
+) => {
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [foldersScanned, setFoldersScanned] = useState(0);
     const [totalSpace, setTotalSpace] = useState({ free: '', size: '' });
@@ -106,11 +111,15 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
     const [drives, setDrives] = useState<Drive[]>([]);
     const [state, dispatch] = useReducer(reducer, {
         scanning: ScanState.Idle,
-        deleting: DeleteState.Idle,
+        deleting: DeleteState.Idle
     });
     const isDeleted = propEq('status', ProjectStatus.Deleted);
+    const isInstalled = propEq('status', ProjectStatus.Installed);
     const deletedProjects = useMemo(() => filter(isDeleted, projects), [
-        projects,
+        projects
+    ]);
+    const installedProjects = useMemo(() => filter(isInstalled, projects), [
+        projects
     ]);
 
     useEffect(() => {
@@ -120,14 +129,14 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
         let dirs = Array.isArray(folders.current)
             ? folders.current
             : [folders.current];
-        dirs = uniq(dirs.map((dir) => path.parse(dir).root));
+        dirs = uniq(dirs.map(dir => path.parse(dir).root));
         const calculateFreeSpace = compose(formatByBytes, sumBy('free'));
         const calculateSize = compose(formatByBytes, sumBy('size'));
-        Promise.all(dirs.map((dir) => checkDiskSpace(dir))).then(
+        Promise.all(dirs.map(dir => checkDiskSpace(dir))).then(
             (sizes: CheckDiskSpaceResult[]) => {
                 setTotalSpace({
                     free: calculateFreeSpace(sizes),
-                    size: calculateSize(sizes),
+                    size: calculateSize(sizes)
                 });
             }
         );
@@ -137,7 +146,7 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
     const fetchLocalData = useCallback(() => {
         finder.cancel();
         setProjects(electronStore.get('deleted', []));
-    },  []);
+    }, []);
     const startScan = useCallback(
         (dir: string | string[]) => {
             finder.start(dir);
@@ -151,17 +160,17 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
     const updateProjectsStatus = useCallback(
         ({
             updatedProjects,
-            status,
+            status
         }: {
             updatedProjects: ProjectData[];
             status: ProjectStatus;
         }) => {
-            updatedProjects = updatedProjects.map((project) => ({
+            updatedProjects = updatedProjects.map(project => ({
                 ...project,
-                status: status,
+                status: status
             }));
 
-            setProjects((projects) =>
+            setProjects(projects =>
                 unionWith(eqBy(prop('path')), updatedProjects, projects)
             );
         },
@@ -173,27 +182,25 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
             dispatch({ type: Actions.DeleteProjects });
             updateProjectsStatus({
                 updatedProjects: deletedProjects,
-                status: ProjectStatus.Deleting,
+                status: ProjectStatus.Deleting
             });
             const paths = deletedProjects.map(
-                (project) => `${path.join(project.path, 'node_modules')}`
+                project => `${path.join(project.path, 'node_modules')}`
             );
 
             logger.info(
                 chalk.yellowBright(
                     `removing projects ${chalk.redBright(
-                        deletedProjects
-                            .map((project) => project.name)
-                            .join(' , ')
+                        deletedProjects.map(project => project.name).join(' , ')
                     )}`
                 )
             );
             forkJoin(
                 demoMode
                     ? from([0]).pipe(delay(5000))
-                    : paths.map((path) =>
+                    : paths.map(path =>
                           from(fs.remove(path)).pipe(
-                              catchError((e) => {
+                              catchError(e => {
                                   console.error(e);
                                   return EMPTY;
                               })
@@ -205,11 +212,11 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
                     () => {
                         updateProjectsStatus({
                             updatedProjects: deletedProjects,
-                            status: ProjectStatus.Deleted,
+                            status: ProjectStatus.Deleted
                         });
                         dispatch({ type: Actions.FinishedDelete });
                     },
-                    (e) => logger.error(e)
+                    e => logger.error(e)
                 );
         },
         [dispatch, updateProjectsStatus]
@@ -217,6 +224,14 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
     useEffect(() => {
         electronStore.openInEditor();
     }, []);
+    useEffect(() => {
+        const history = electronStore.get('deleted', []);
+        const comp = (x, y) => x.path === y.path;
+        electronStore.set(
+            'deleted',
+            differenceWith(comp, history, installedProjects)
+        );
+    }, [installedProjects]);
     useEffect(() => {
         if (isEmpty(deletedProjects)) {
             return;
@@ -226,7 +241,6 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
             'deleted',
             uniqWith(eqBy(prop('path')), [...history, ...deletedProjects])
         );
-
     }, [deletedProjects]);
 
     const resetScan = useCallback(() => {
@@ -261,22 +275,20 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
     }, [finder, dispatch]);
 
     useEffect(() => {
-        const sub = finder.foldersScanned$.subscribe((number) =>
+        const sub = finder.foldersScanned$.subscribe(number =>
             setFoldersScanned(number)
         );
         return () => sub?.unsubscribe();
     }, [finder]);
 
     useEffect(() => {
-        const sub = finder
-            ?.scanDrives()
-            .subscribe((drives) => setDrives(drives));
+        const sub = finder?.scanDrives().subscribe(drives => setDrives(drives));
         return () => sub?.unsubscribe();
     }, [finder]);
 
     useEffect(() => {
-        const sub = finder.project$.subscribe((project) => {
-            setProjects((projects) =>
+        const sub = finder.project$.subscribe(project => {
+            setProjects(projects =>
                 uniqWith(propEq('path'), [...projects, project])
             );
         });
@@ -302,6 +314,6 @@ export const useScan = (finder: Finder, electronStore: ElectronStore<{"deleted":
         resetScan,
         stopScan,
         state,
-        drives,
+        drives
     };
 };

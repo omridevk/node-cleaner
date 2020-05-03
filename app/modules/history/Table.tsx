@@ -32,8 +32,9 @@ import { Alert } from '@material-ui/lab';
 import { PageBar } from '../../common/PageBar';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { createStyles } from '@material-ui/core';
-import { spawn } from 'child_process';
 import { ProjectStatus } from '../../types/Project';
+import { Lines } from './Lines';
+import { useInstall } from '../../hooks/useInstall';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -54,6 +55,16 @@ function fuzzyTextFilterFn(
     return matchSorter(rows, filterValue, { keys: [row => row.values[id]] });
 }
 
+interface Project extends ProjectData {
+    output: string[];
+}
+
+type Actions = 'update_data';
+interface Action<T = any> {
+    type: Actions;
+    payload?: T;
+}
+
 interface TableProps {
     columns: Array<Column<ProjectData>>;
 }
@@ -66,33 +77,34 @@ export function Table({ columns }: TableProps) {
         updateProjectsStatus
     } = useContext(ProjectDataContext);
     const classes = useStyles();
+    const { installData, install } = useInstall();
+    const projectsPath = useMemo(() => {
+        return projects.map((project: ProjectData) => [project.path, []]);
+    }, [projects]);
     useEffect(() => {
         fetchLocalData();
     }, []);
-
-    function onInstall(project: ProjectData) {
-        const manager = project.isYarn ? 'yarn' : 'npm';
-        const install = spawn(`${manager} install`, [], {
-            cwd: project.path,
-            shell: true,
-            customFds: [0, 1, 2]
-        });
-        let line = 0;
+    function onInstall(project: ProjectData, rowId: string) {
+        toggleRowExpanded(rowId, true);
         updateProjectsStatus({
             updatedProjects: [project],
             status: ProjectStatus.Installing
         });
-        // process.stdout.on('data', (data) => {
-        // })
-        install.stdout.on('data', data => {
-            console.log(`line ${++line}`);
-            console.log(data.toString());
-        });
-        install.stderr.on('data', data => {
-            console.log(`line ${++line}`);
-            console.log(data.toString());
-        });
+        install(project);
     }
+
+    useEffect(() => {
+        installData.forEach((data, id) => {
+            if (!data.done) {
+                return;
+            }
+            const project = projects!.find(project => project.id === id);
+            updateProjectsStatus({
+                updatedProjects: [project],
+                status: ProjectStatus.Installed
+            });
+        });
+    }, [installData]);
 
     const filterTypes = React.useMemo(
         () => ({
@@ -147,6 +159,7 @@ export function Table({ columns }: TableProps) {
         toggleAllRowsSelected,
         prepareRow,
         isAllRowsSelected,
+        toggleRowExpanded,
         toggleRowSelected,
         selectedFlatRows,
         state: { selectedRowIds, globalFilter }
@@ -154,6 +167,7 @@ export function Table({ columns }: TableProps) {
         {
             autoResetSelectedRows: false,
             autoResetSortBy: false,
+            autoResetExpanded: false,
             autoResetGlobalFilter: false,
             autoResetFilters: false,
             columns,
@@ -207,53 +221,46 @@ export function Table({ columns }: TableProps) {
                     {rows.map(row => {
                         prepareRow(row);
                         const { original: project } = row;
+                        const { key } = row.getRowProps();
+                        const data = installData.get(project.id);
                         return (
-                            <TableRow
-                                component="div"
-                                onContextMenu={e => {
-                                    e.preventDefault(0);
-                                    // handleContextMenu(row.original);
-                                }}
-                                {...row.getRowProps()}
-                                // classes={{
-                                //     root:
-                                //         project.status ===
-                                //         ProjectStatus.Deleting
-                                //             ? ''
-                                //             : classes.rowRoot,
-                                // }}
-                                onClick={e => {
-                                    e.preventDefault();
-                                    toggleRowSelected(row.id);
-                                    // handleRowClicked(row);
-                                }}
-                            >
-                                {row.cells.map(cell => {
-                                    return (
-                                        <TableCell
-                                            component="div"
-                                            {...cell.getCellProps()}
-                                            classes={{ root: classes.cellRoot }}
-                                        >
-                                            {cell.render('Cell')}
-                                        </TableCell>
-                                    );
-                                })}
-                            </TableRow>
+                            <React.Fragment key={key}>
+                                <TableRow
+                                    component="div"
+                                    onContextMenu={e => {
+                                        e.preventDefault(0);
+                                    }}
+                                    {...row.getRowProps()}
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        toggleRowSelected(row.id);
+                                    }}
+                                >
+                                    {row.cells.map(cell => {
+                                        return (
+                                            <TableCell
+                                                component="div"
+                                                {...cell.getCellProps()}
+                                                classes={{
+                                                    root: classes.cellRoot
+                                                }}
+                                            >
+                                                {cell.render('Cell')}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                                {row.isExpanded && data?.lines && (
+                                    <Lines
+                                        lines={data.lines}
+                                        done={data?.done}
+                                    />
+                                )}
+                            </React.Fragment>
                         );
                     })}
-                    {/*<Rows*/}
-                    {/*    isAllRowsSelected={isAllRowsSelected}*/}
-                    {/*    toggleAllRowsSelected={toggleAllRowsSelected}*/}
-                    {/*    rows={rows}*/}
-                    {/*    toggleRowSelected={toggleRowSelected}*/}
-                    {/*    prepareRow={prepareRow}*/}
-                    {/*/>*/}
                 </TableBody>
             </MaUTable>
-            {/*{!!projects.length && (*/}
-            {/*    <Popups toggleAllRowsSelected={toggleAllRowsSelected} />*/}
-            {/*)}*/}
         </>
     );
 }
