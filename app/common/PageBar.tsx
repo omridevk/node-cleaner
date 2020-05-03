@@ -9,6 +9,7 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import { Link } from 'react-router-dom';
 import { Routes } from '../constants';
 import Button from '@material-ui/core/Button';
+import { drawerWidth } from '../Routes';
 
 interface Props {
     title: string;
@@ -25,6 +26,8 @@ const useStyles = makeStyles((theme: Theme) =>
                     ? 'rgba(227, 227, 227, 0.85)'
                     : '#303030',
             color: theme.palette.text.primary,
+            width: `calc(100% - ${drawerWidth}px)`,
+            marginLeft: drawerWidth
         },
         root: {
             flexGrow: 1,

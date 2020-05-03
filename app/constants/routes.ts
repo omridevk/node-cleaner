@@ -7,7 +7,7 @@
 export enum Routes {
     HOME = '/',
     PROJECTS = '/projects',
-    HISTORY = '/test',
+    HISTORY = '/history',
 }
 
 // export const routes = {

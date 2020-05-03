@@ -70,10 +70,10 @@ const createWindow = async () => {
 
     mainWindow = new BrowserWindow({
         show: false,
-        width: 1024,
+        width: 1250,
         height: 728,
         backgroundColor: '#2e2c29',
-        minWidth: 950,
+        minWidth: 1250,
         minHeight: 300,
         icon: appIcon,
         webPreferences: { nodeIntegration: true }
