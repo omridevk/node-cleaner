@@ -280,19 +280,16 @@ export const useScan = (
         );
         return () => sub?.unsubscribe();
     }, [finder]);
-
     useEffect(() => {
-        const sub = finder?.scanDrives().subscribe(drives => setDrives(drives));
+        const sub = finder.project$.subscribe(project =>
+            setProjects(projects => [...projects, project])
+        );
         return () => sub?.unsubscribe();
     }, [finder]);
 
     useEffect(() => {
-        const sub = finder.project$.subscribe(project => {
-            setProjects(projects =>
-                uniqWith(propEq('path'), [...projects, project])
-            );
-        });
-        return () => sub!.unsubscribe();
+        const sub = finder?.scanDrives().subscribe(drives => setDrives(drives));
+        return () => sub?.unsubscribe();
     }, [finder]);
 
     // finder clean up
