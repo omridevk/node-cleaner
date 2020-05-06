@@ -199,7 +199,7 @@
         "@types/react-redux": "^7.1.8",
         "@types/react-router": "^5.1.7",
         "@types/react-router-dom": "^5.1.5",
-        "@types/react-table": "^7.0.16",
+        "@types/react-table": "^7.0.17",
         "@types/react-test-renderer": "^16.9.2",
         "@types/redux-logger": "^3.0.7",
         "@types/rimraf": "^3.0.0",
