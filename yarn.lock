@@ -12120,10 +12120,10 @@ react-spring@^8.0.27:
     "@babel/runtime" "^7.3.1"
     prop-types "^15.5.8"
 
-react-table@^7.0.5:
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.0.5.tgz#619c069dc585bb1dbfaa2ad4384de8d267267054"
-  integrity sha512-zm6NvcHlg3r4E4le6ESXKneaHEpPHAZJn+FAZDCleS0++JEKs1rPq9AtHMcZmiiqxKkerM4wco9mH2ztaX0zYQ==
+react-table@^7.0.6:
+  version "7.0.6"
+  resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.0.6.tgz#ab7c9bb527339c49af39a4380884e55bbf67d8bc"
+  integrity sha512-XP+mXWCDd6VNZ/fCq69yc/vCWRGTfhQHc0fsLrnMVwT9m3MmmErMLywMbYQkkDjg1OBbhoDXpuo/R7VKGpFbQg==
   dependencies:
     "@scarf/scarf" "^1.0.4"
 
