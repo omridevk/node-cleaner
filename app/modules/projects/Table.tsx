@@ -11,16 +11,10 @@ import {
     useResizeColumns,
     useRowSelect,
     useSortBy,
-    useTable,
+    useTable
 } from 'react-table';
 import { ProjectData } from '../../types';
-import React, {
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { DefaultColumnFilter, extraColumns } from './columns';
 import { Toolbar } from './Toolbar';
 import MaUTable from '@material-ui/core/Table';
@@ -28,11 +22,21 @@ import TableBody from '@material-ui/core/TableBody';
 import { Rows } from './Rows';
 import { ProjectDataContext } from '../../containers/Root';
 import { Popups } from './Popups';
-import { TableHead } from './TableHead';
-import { Header } from './Header';
+import { TableHead } from '../../common/TableHead';
+import { PageBar } from '../../common/PageBar';
 import { ScanState } from '../../hooks/useScan';
 import { useHistory } from 'react-router';
 import { ProjectStatus } from '../../types/Project';
+import Tooltip from '@material-ui/core/Tooltip';
+import IconButton from '@material-ui/core/IconButton';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import { animated, useSpring } from 'react-spring';
+import PauseIcon from '@material-ui/icons/Pause';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import Brightness7Icon from '@material-ui/icons/Brightness7';
+import Brightness4Icon from '@material-ui/icons/Brightness4';
 
 function fuzzyTextFilterFn(
     rows: Row<ProjectData>[],
@@ -59,6 +63,9 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         resumeScan,
         darkMode,
     } = useContext(ProjectDataContext);
+
+    const finished = scanning === ScanState.Finished;
+    const props = useSpring({ foldersScanned });
 
     const activeProjects = useMemo(
         () =>
@@ -186,22 +193,67 @@ export function Table({ columns, onDeleteRow, onDeleteProjects }: TableProps) {
         toggleAllRowsSelected(false);
         resetScan();
     }, [resetScan, toggleAllRowsSelected]);
+    const subtitle = useMemo(
+        () => (
+            <span>
+                Scanned {finished ? ' total of ' : ''}
+                <animated.span>
+                    {props.foldersScanned.interpolate((x) =>
+                        parseInt(x).toLocaleString()
+                    )}
+                </animated.span>{' '}
+                folders {finished ? '' : ' so far...'}
+            </span>
+        ),
+        [finished, props]
+    );
 
     // Render the UI for your table
     return (
         <>
-            <Header
-                foldersScanned={foldersScanned}
-                resetScan={onResetScan}
-                onDeleteAll={deleteAll}
-                projects={activeProjects!}
-                toggleScanState={toggleScan}
-                onCancelScan={cancelScan}
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                title={'Node Cleaner'}
-                state={scanning}
-            />
+            <PageBar
+                loading={loading}
+                title={scanning ? 'Scanning' : 'Node Cleaner'}
+                subtitle={subtitle}
+            >
+                <Tooltip title={'Back'}>
+                    <IconButton
+                        edge="start"
+                        aria-label="delete selected"
+                        onClick={cancelScan}
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
+                </Tooltip>
+                {!finished && (
+                    <Tooltip title={loading ? 'Pause' : 'Resume'}>
+                        <IconButton onClick={toggleScan}>
+                            {loading ? <PauseIcon /> : <PlayArrowIcon />}
+                        </IconButton>
+                    </Tooltip>
+                )}
+                <Tooltip title={'Rescan'}>
+                    <IconButton onClick={onResetScan}>
+                        <RefreshIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title={loading ? 'Scanning' : 'Delete All'}>
+                    <span>
+                        <IconButton
+                            disabled={!projects.length || loading}
+                            aria-label="delete selected"
+                            onClick={deleteAll}
+                        >
+                            <DeleteForeverIcon />
+                        </IconButton>
+                    </span>
+                </Tooltip>
+                <Tooltip title={'Toggle Light/Dark Theme'}>
+                    <IconButton onClick={toggleDarkMode}>
+                        {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+                    </IconButton>
+                </Tooltip>
+            </PageBar>
             <Toolbar
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}

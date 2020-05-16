@@ -4,20 +4,24 @@ import { ProjectData } from '../../types';
 import { formatByBytes } from '../../utils/helpers';
 import moment from 'moment';
 import Tooltip from '@material-ui/core/Tooltip';
-import { SliderColumnFilter } from '../../common/SliderFilter';
 import { CircularProgressProps, createStyles, Theme } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import { IndeterminateCheckbox } from '../../common/IndeterminateCheckbox';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
+import ReplayIcon from '@material-ui/icons/Replay';
 import { isDarwin } from '../../constants';
 import { shell } from 'electron';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProjectStatus } from '../../types/Project';
+import { SliderColumnFilter } from '../../common/SliderFilter';
+import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import DoneIcon from '@material-ui/icons/Done';
 import { BlueProgress } from '../../common/BlueProgressBar';
+import { InstallButton } from './InstallButton';
 
 // Define a custom filter filter function!
 function filterGreaterThan(
@@ -37,10 +41,10 @@ const useStyles = makeStyles(() =>
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis'
-        }
+        },
+        iconDone: {}
     })
 );
-
 
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
@@ -75,7 +79,7 @@ export const defaultColumns = [
         }
     },
     {
-        Header: 'Size',
+        Header: 'Original size',
         accessor: 'size',
         sortInverted: true,
         Filter: SliderColumnFilter,
@@ -132,11 +136,11 @@ export const defaultColumns = [
 ];
 
 export const extraColumns = ({
-    onDeleteRow,
-    hooks
+    hooks,
+    onInstall
 }: {
-    onDeleteRow: (project: ProjectData) => void;
     hooks: Hooks<ProjectData>;
+    onInstall: (project: ProjectData, rowId: string) => void;
 }) => {
     {
         hooks.visibleColumns.push(columns => [
@@ -168,8 +172,9 @@ export const extraColumns = ({
             {
                 id: 'actions',
                 disableResizing: true,
+                minWidth: 200,
                 Header: () => 'Actions',
-                Cell: ({ row: { original } }) => (
+                Cell: ({ row }) => (
                     <Container>
                         <Grid
                             container
@@ -177,40 +182,11 @@ export const extraColumns = ({
                             direction="row"
                             justify="flex-end"
                         >
-                            <Tooltip
-                                title={
-                                    original.status === ProjectStatus.Active
-                                        ? 'Delete'
-                                        : ''
-                                }
-                                placement="top"
-                            >
-                                <span>
-                                    <IconButton
-                                        aria-label="delete"
-                                        disabled={
-                                            original.status ===
-                                            ProjectStatus.Deleting
-                                        }
-                                        onClick={event => {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            onDeleteRow(original);
-                                        }}
-                                    >
-                                        {original.status ===
-                                            ProjectStatus.Deleting && (
-                                            <BlueProgress />
-                                        )}
-                                        {[
-                                            ProjectStatus.Active,
-                                            ProjectStatus.PendingDelete
-                                        ].includes(original.status) && (
-                                            <DeleteIcon />
-                                        )}
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
+                            <InstallButton
+                                project={row.original}
+                                rowId={row.id}
+                                onInstall={onInstall}
+                            />
                             <Tooltip
                                 title={`Open in ${
                                     isDarwin ? 'finder' : 'file explorer'
@@ -223,10 +199,39 @@ export const extraColumns = ({
                                         onClick={event => {
                                             event.preventDefault();
                                             event.stopPropagation();
-                                            shell.openItem(original.path);
+                                            shell.openItem(row.original.path);
                                         }}
                                     >
                                         <FolderOpenIcon />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                            <Tooltip
+                                title={row.isExpanded ? 'Minimize' : 'Expand'}
+                                placement="top"
+                            >
+                                <span>
+                                    <IconButton
+                                        aria-label={
+                                            row.isExpanded
+                                                ? 'Minimize'
+                                                : 'Expand'
+                                        }
+                                        disabled={
+                                            row.original.status ===
+                                            ProjectStatus.Deleted
+                                        }
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            row.toggleRowExpanded();
+                                        }}
+                                    >
+                                        {row.isExpanded ? (
+                                            <ExpandMoreIcon />
+                                        ) : (
+                                            <ExpandLessIcon />
+                                        )}
                                     </IconButton>
                                 </span>
                             </Tooltip>

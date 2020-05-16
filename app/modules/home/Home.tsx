@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import Container from '@material-ui/core/Container';
 import { createStyles } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -8,8 +8,9 @@ import { Scan, ScanSelection, ScanType } from './ScanSelection';
 import { FolderInput } from './FolderInput';
 import { DriveSelector } from './DriveSelector';
 import { Drive } from '../../utils/list-drives';
-import { isDarwin, isWin } from '../../constants';
 import { isEmpty } from 'ramda';
+import { ProjectDataContext } from '../../containers/Root';
+import { ScanState } from '../../hooks/useScan';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -37,7 +38,8 @@ interface Props {
 
 export default function Home({ drives }: Props) {
     const classes = useStyles();
-    const [directories, setDirectories] = useState<string[]>([]);
+    const { setFolders, state, resetScan } = useContext(ProjectDataContext);
+    const { folders } = state;
     const [scan, setScan] = useState<Scan>({
         type: ScanType.All,
         title: 'All'
@@ -45,17 +47,17 @@ export default function Home({ drives }: Props) {
     useEffect(() => {
         const dirs = drives.map(({ path }) => path);
         if (isEmpty(dirs)) {
-            setDirectories(['/']);
+            setFolders(['/']);
             return;
         }
-        setDirectories(dirs);
-    }, [drives, setDirectories]);
+        setFolders(dirs);
+    }, [drives]);
     useEffect(() => {
         if (scan.type !== ScanType.All) {
             return;
         }
-        setDirectories(drives.map(({ path }) => path));
-    }, [scan, setDirectories, drives]);
+        setFolders(drives.map(({ path }) => path));
+    }, [scan, drives]);
     const scans = useMemo(() => {
         return [
             {
@@ -79,15 +81,15 @@ export default function Home({ drives }: Props) {
     }
 
     function handleFolderChanged(folders: string[]) {
-        setDirectories(folders);
+        setFolders(folders);
     }
 
     function handleDriveChanged(drives: Drive[]) {
-        setDirectories(drives.map(({ path }) => path));
+        setFolders(drives.map(({ path }) => path));
     }
 
     const shouldDisableScan =
-        (isWindows && scan.type === ScanType.All && !directories.length) ||
+        (isWindows && scan.type === ScanType.All && !folders.length) ||
         !drives.length;
 
     return (
@@ -108,9 +110,11 @@ export default function Home({ drives }: Props) {
                 alignItems="center"
             >
                 <ScanButton
+                    scanning={state.scanning !== ScanState.Idle}
                     scanType={scan.type}
+                    resetScan={resetScan}
                     disabled={shouldDisableScan}
-                    directories={directories}
+                    directories={folders}
                 />
                 <div className={classes.settingsContainer}>
                     <ScanSelection

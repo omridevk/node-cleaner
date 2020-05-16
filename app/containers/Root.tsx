@@ -10,34 +10,16 @@ import { Drive } from '../utils/list-drives';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
 import { noop } from '../utils/helpers';
-import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
+import { useScan, State, ScanState, DeleteState, ProjectType } from '../hooks/useScan';
 import { SnackbarProvider } from 'notistack';
-import { maximumSnackbars } from '../constants';
+import { electronStoreName, maximumSnackbars } from '../constants';
 import { ipcRenderer } from 'electron';
 import { Messages } from '../enums/messages';
 import { ProjectStatus } from '../types/Project';
 import { Finder } from '../utils/finder';
+import ElectronStore from 'electron-store';
 
-const defaultContext = {
-    state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
-    projects: [],
-    darkMode: false,
-    toggleDarkMode: noop,
-    foldersScanned: 0,
-    deletedProjects: [],
-    resetScan: noop,
-    updateProjectsStatus: noop,
-    startScan: (_: any) => {},
-    totalSpace: { free: '', size: '' },
-    pauseScan: noop,
-    stopScan: noop,
-    deleteProjects: noop,
-    resumeScan: noop,
-    currentFolder: '',
-    drives: []
-};
-
-export const ProjectDataContext = React.createContext<{
+interface ProjectContext {
     projects?: ProjectData[];
     state: State;
     foldersScanned: number;
@@ -45,23 +27,57 @@ export const ProjectDataContext = React.createContext<{
     toggleDarkMode: () => void;
     updateProjectsStatus: ({
         updatedProjects,
-        status
+        status,
+        type
     }: {
         updatedProjects: ProjectData[];
         status: ProjectStatus;
+        type?: ProjectType
     }) => void;
-    deletedProjects: ProjectData[];
     resetScan: () => void;
+    cleanedProjects: ProjectData[];
     deleteProjects: (projects: ProjectData[]) => void;
     darkMode: boolean;
-    drives: Drive[];
+    setFolders: (folders: string[]) => void;
+    setDrives: (drives: Drive[]) => void;
+    fetchLocalData: () => void;
     startScan: (dir: string | string[]) => void;
     pauseScan: () => void;
     stopScan: () => void;
     resumeScan: () => void;
     totalSizeString?: string;
     currentFolder?: string;
-}>(defaultContext);
+}
+
+const defaultContext: ProjectContext = {
+    state: {
+        scanning: ScanState.Idle,
+        deleting: DeleteState.Idle,
+        drives: [],
+        folders: []
+    },
+    projects: [],
+    cleanedProjects: [],
+    darkMode: false,
+    toggleDarkMode: noop,
+    foldersScanned: 0,
+    fetchLocalData: noop,
+    resetScan: noop,
+    setDrives: noop,
+    setFolders: noop,
+    updateProjectsStatus: noop,
+    startScan: (_: any) => {},
+    totalSpace: { free: '', size: '' },
+    pauseScan: noop,
+    stopScan: noop,
+    deleteProjects: noop,
+    resumeScan: noop,
+    currentFolder: ''
+};
+
+export const ProjectDataContext = React.createContext<ProjectContext>(
+    defaultContext
+);
 
 type Props = {
     store: any;
@@ -86,6 +102,9 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
     const finder = useMemo(() => {
         return new Finder();
     }, []);
+    const electronStore = useMemo(() => {
+        return new ElectronStore({ name: electronStoreName });
+    }, []);
 
     useEffect(() => {
         function onChangeTheme(_, darkMode: boolean) {
@@ -102,16 +121,18 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
         pauseScan,
         stopScan,
         startScan,
+        fetchLocalData,
         totalSpace,
+        setFolders,
+        setDrives,
+        cleanedProjects,
         resetScan,
         deleteProjects,
         foldersScanned,
         updateProjectsStatus,
-        deletedProjects,
         state,
-        drives,
         totalSizeString
-    } = useScan(finder);
+    } = useScan(finder, electronStore);
 
     return (
         <>
@@ -121,16 +142,18 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
                         <CssBaseline />
                         <ProjectDataContext.Provider
                             value={{
-                                drives,
+                                setFolders,
+                                setDrives,
                                 totalSpace,
                                 resetScan,
+                                fetchLocalData,
+                                cleanedProjects,
                                 foldersScanned,
                                 darkMode,
                                 resumeScan,
                                 updateProjectsStatus,
                                 startScan,
                                 deleteProjects,
-                                deletedProjects,
                                 stopScan,
                                 pauseScan,
                                 toggleDarkMode: () =>

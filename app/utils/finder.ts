@@ -28,6 +28,7 @@ import * as log from 'electron-log';
 import { unionWith } from 'ramda';
 import { eqBy } from 'ramda';
 import { prop } from 'ramda';
+import md5 from 'blueimp-md5';
 const logger = log.scope('finder');
 
 const checkSize = process.platform === 'win32' ? checkWin32 : checkUnix;
@@ -58,11 +59,10 @@ const getWalker = (dir = '/', paused = true) => {
 export class Finder {
     private _walkers: ReaddirpStream[] = [];
 
-    private _projects = new BehaviorSubject<ProjectData[]>([]);
-
-    public projects$ = this._projects.asObservable();
-
-    private _project = new ReplaySubject<ProjectData>(Number.POSITIVE_INFINITY, 2000);
+    private _project = new ReplaySubject<ProjectData>(
+        Number.POSITIVE_INFINITY,
+        2000
+    );
 
     public project$ = this._project.asObservable();
 
@@ -70,7 +70,7 @@ export class Finder {
 
     public foldersScanned$ = this._foldersScanned
         .asObservable()
-        .pipe(throttleTime(300));
+        .pipe(throttleTime(500));
 
     private _scanReset = new BehaviorSubject<boolean>(false);
     private scanReset = this._scanReset.asObservable().pipe(filter(Boolean));
@@ -97,12 +97,6 @@ export class Finder {
         return listDrives();
     }
 
-    updateProjects = (projects: ProjectData[]) => {
-        this._projects.next(
-            unionWith(eqBy(prop('path')), projects, this._projects.getValue())
-        );
-    };
-
     logExecutionTime = () => {
         logger.log(
             `took: ${moment
@@ -122,7 +116,6 @@ export class Finder {
                 getWalker(directory.replace(/(\s+)/g, '\\$1'), false)
             );
         });
-        this._projects.next([]);
         this._startTime = performance.now();
         this._state = ScanState.Loading;
         this._addListeners();
@@ -144,7 +137,6 @@ export class Finder {
     reset = () => {
         this._foldersScanned.next(0);
         this._scanReset.next(true);
-        this._projects.next([]);
         this._state = ScanState.Idle;
     };
 
@@ -161,7 +153,6 @@ export class Finder {
         }
         walkers = 0;
         this._removeListeners();
-        this._projects.next([]);
         this._walkers.forEach(walker => walker.destroy());
         this._walkers = [];
     }
@@ -207,14 +198,24 @@ export class Finder {
                     checkSize(`${path.join(entry.fullPath, 'node_modules')}`)
                 ])
             ).pipe(
-                map(([{ name, description }, { mtime }, { size }]) => ({
+                switchMap(results =>
+                    from(
+                        fs.pathExists(path.join(entry.fullPath, 'yarn.lock'))
+                    ).pipe(map(isYarn => [...results, isYarn]))
+                ),
+                map(([{ name, description }, { mtime }, { size }, isYarn]) => ({
                     size,
                     name,
+                    isYarn,
                     key: entry.fullPath,
                     status: ProjectStatus.Active,
                     description,
                     lastModified: mtime,
                     path: entry.fullPath
+                })),
+                map(project => ({
+                    ...project,
+                    id: md5(JSON.stringify(project))
                 }))
             );
 
@@ -239,7 +240,6 @@ export class Finder {
                 ),
                 tap((project: ProjectData) => {
                     this._project.next(project);
-                    this.updateProjects([project]);
                 }),
                 take(1)
             )

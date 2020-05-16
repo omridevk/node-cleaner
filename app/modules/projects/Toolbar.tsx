@@ -28,6 +28,7 @@ import withStyles from '@material-ui/core/styles/withStyles';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import useTheme from '@material-ui/core/styles/useTheme';
 import { ProjectStatus } from '../../types/Project';
+import { TableSearchField } from '../../common/TableSearchField';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
@@ -75,39 +76,7 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
     })
 );
 
-const SearchField = ({
-    preGlobalFilteredRows,
-    globalFilter,
-    setGlobalFilter
-}: any) => {
-    const count = preGlobalFilteredRows.length;
-    return (
-        <TextField
-            value={globalFilter || ''}
-            onChange={event => setGlobalFilter(event.target.value || undefined)}
-            placeholder={`Search ${count} projects`}
-            InputProps={{
-                startAdornment: (
-                    <InputAdornment position="start">
-                        <Tooltip title={'Search'}>
-                            <SearchIcon color="inherit" fontSize="small" />
-                        </Tooltip>
-                    </InputAdornment>
-                ),
-                endAdornment: (
-                    <InputAdornment position="end">
-                        <IconButton
-                            disabled={!globalFilter}
-                            onClick={() => setGlobalFilter('')}
-                        >
-                            <ClearIcon color="inherit" fontSize="small" />
-                        </IconButton>
-                    </InputAdornment>
-                )
-            }}
-        />
-    );
-};
+
 
 interface HeaderProps {
     numSelected: number;
@@ -145,7 +114,6 @@ const Header = ({
     totalSelectedSize = '',
     totalSpace
 }: HeaderProps) => {
-    const classes = useToolbarStyles();
     const theme = useTheme();
     return (
         <>
@@ -217,7 +185,7 @@ export const Toolbar = React.forwardRef(
                     numSelected={numSelected}
                 />
                 <div className={classes.rightSide}>
-                    <SearchField
+                    <TableSearchField
                         preGlobalFilteredRows={preGlobalFilteredRows}
                         globalFilter={globalFilter}
                         setGlobalFilter={setGlobalFilter}
