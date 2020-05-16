@@ -27,7 +27,6 @@ import Brightness7Icon from '@material-ui/icons/Brightness7';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import { Toolbar } from './Toolbar';
 import { Alert } from '@material-ui/lab';
 import { PageBar } from '../../common/PageBar';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -36,6 +35,7 @@ import { ProjectStatus } from '../../types/Project';
 import { Lines } from './Lines';
 import { useInstall } from '../../hooks/useInstall';
 import { ProjectType } from '../../hooks/useScan';
+import { Toolbar } from '../../common/Toolbar';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -208,6 +208,7 @@ export function Table({ columns }: TableProps) {
             <Toolbar
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={globalFilter}
+                projects={projects}
                 setGlobalFilter={setGlobalFilter}
                 selectedFlatRows={selectedFlatRows}
                 selectedRowIds={selectedRowIds}
@@ -232,12 +233,25 @@ export function Table({ columns }: TableProps) {
                         return (
                             <React.Fragment key={key}>
                                 <TableRow
+                                    classes={{
+                                        root:
+                                            project.status ===
+                                            ProjectStatus.Installing
+                                                ? ''
+                                                : classes.rowRoot
+                                    }}
                                     component="div"
                                     onContextMenu={e => {
                                         e.preventDefault(0);
                                     }}
                                     {...row.getRowProps()}
                                     onClick={e => {
+                                        if (
+                                            project.status ===
+                                            ProjectStatus.Installing
+                                        ) {
+                                            return;
+                                        }
                                         e.preventDefault();
                                         toggleRowSelected(row.id);
                                     }}

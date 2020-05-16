@@ -11,7 +11,7 @@ import map from 'ramda/src/map';
 import prop from 'ramda/src/prop';
 import { ProjectData, ProjectStatus } from '../../types/Project';
 import { useSnackbar } from 'notistack';
-import { differenceWith, eqBy, head, isEmpty, uniq } from 'ramda';
+import { differenceWith, eqBy, head, isEmpty, uniq, uniqWith } from 'ramda';
 
 interface Props {
     toggleAllRowsSelected: (value?: boolean) => void;
@@ -57,7 +57,7 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
         return differenceWith(eqBy(prop('path')), deleted, showedProjects);
     }, [deleted]);
     useEffect(() => {
-        setShowedProjects((projects) => uniq([...projects, ...toShow]));
+        setShowedProjects((projects) => uniqWith(eqBy(prop('path')), [...projects, ...toShow]));
         if (toShow.length > maximumSnackbars) {
             setShowSnackbar(true);
             return;
@@ -82,7 +82,6 @@ export const Popups: React.FC<Props> = ({ toggleAllRowsSelected }) => {
         <>
             <Snackbar
                 onClose={() => {
-                    console.log('here???');
                     setShowSnackbar(false);
                 }}
                 open={showSnackbar}

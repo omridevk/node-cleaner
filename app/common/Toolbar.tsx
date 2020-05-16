@@ -1,43 +1,29 @@
 import { IdType, Row } from 'react-table';
-import { ProjectData } from '../../types';
-import { formatByBytes, sumBySize } from '../../utils/helpers';
-import * as R from 'ramda';
+import { ProjectData } from '../types';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import { createStyles, lighten, Theme } from '@material-ui/core';
+import withStyles from '@material-ui/core/styles/withStyles';
+import useTheme from '@material-ui/core/styles/useTheme';
 import Typography from '@material-ui/core/Typography';
+import React, { useContext, useMemo } from 'react';
+import { ProjectDataContext } from '../containers/Root';
+import { ProjectStatus } from '../types/Project';
+import { compose } from 'ramda';
+import { formatByBytes, sumBySize } from '../utils/helpers';
 import MaUToolbar from '@material-ui/core/Toolbar';
 import clsx from 'clsx';
-import Tooltip from '@material-ui/core/Tooltip';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ClearIcon from '@material-ui/icons/Clear';
-import SearchIcon from '@material-ui/icons/Search';
-import React, { useContext, useMemo } from 'react';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import {
-    createStyles,
-    darken,
-    emphasize,
-    fade,
-    lighten,
-    Theme
-} from '@material-ui/core';
-import InputAdornment from '@material-ui/core/InputAdornment';
-import TextField from '@material-ui/core/TextField';
-import { ProjectDataContext } from '../../containers/Root';
-import { compose } from 'ramda';
-import withStyles from '@material-ui/core/styles/withStyles';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import useTheme from '@material-ui/core/styles/useTheme';
-import { ProjectStatus } from '../../types/Project';
-import { TableSearchField } from '../../common/TableSearchField';
+import { TableSearchField } from './TableSearchField';
+import { useCalculateSize } from '../hooks/useCalculateSize';
 
 interface ToolbarProps {
     selectedRowIds: Record<IdType<ProjectData>, boolean>;
     selectedFlatRows: Array<Row<ProjectData>>;
     preGlobalFilteredRows: any;
+    children?: React.ReactNode;
     globalFilter: any;
     setGlobalFilter: any;
+    projects: ProjectData[];
     searchText?: string;
-    onDeleteSelected: (projects: ProjectData[]) => void;
 }
 
 const useToolbarStyles = makeStyles((theme: Theme) =>
@@ -76,8 +62,6 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
     })
 );
 
-
-
 interface HeaderProps {
     numSelected: number;
     projects: ProjectData[];
@@ -101,7 +85,6 @@ const InfoIcon = withStyles({
             backgroundColor: color,
             display: 'inline-block',
             borderRadius: '30%'
-            // border: `1px solid ${emphasize(color, 0.5)}`
         };
     }
 })(({ classes }: { theme: Theme; color?: string; classes?: any }) => {
@@ -145,15 +128,17 @@ export const Toolbar = React.forwardRef(
             selectedRowIds,
             preGlobalFilteredRows,
             globalFilter,
-            setGlobalFilter,
-            onDeleteSelected
+            projects,
+            children = null,
+            setGlobalFilter
         }: ToolbarProps,
         _
     ) => {
         const classes = useToolbarStyles();
-        const { totalSizeString, projects = [], totalSpace } = useContext(
+        const { totalSpace } = useContext(
             ProjectDataContext
         );
+        const totalSizeString = useCalculateSize(projects);
         const activeProjects = useMemo(() => {
             return projects.filter(
                 project => project.status !== ProjectStatus.Deleted
@@ -166,10 +151,6 @@ export const Toolbar = React.forwardRef(
                 selectedFlatRows.map(row => row.original)
             );
         }, [selectedRowIds]);
-
-        function handleDeleteSelected() {
-            onDeleteSelected(selectedFlatRows.map(row => row.original));
-        }
 
         return (
             <MaUToolbar
@@ -191,16 +172,7 @@ export const Toolbar = React.forwardRef(
                         setGlobalFilter={setGlobalFilter}
                     />
                     {numSelected > 0 ? (
-                        <div className={classes.actionsContainer}>
-                            <Tooltip title="Delete Selected">
-                                <IconButton
-                                    aria-label="delete selected"
-                                    onClick={handleDeleteSelected}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </div>
+                        children
                     ) : null}
                 </div>
             </MaUToolbar>

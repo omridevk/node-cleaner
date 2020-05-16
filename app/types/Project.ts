@@ -12,6 +12,8 @@ export interface ProjectData {
     path: string;
     size: number;
     id: string;
+    // TODO:: use to hide from messages queue.
+    visible: boolean;
     status: ProjectStatus;
     lastModified: Date | string;
     isYarn: boolean;

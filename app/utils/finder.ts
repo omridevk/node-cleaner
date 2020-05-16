@@ -207,6 +207,7 @@ export class Finder {
                     size,
                     name,
                     isYarn,
+                    visible: true,
                     key: entry.fullPath,
                     status: ProjectStatus.Active,
                     description,

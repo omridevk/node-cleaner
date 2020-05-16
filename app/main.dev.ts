@@ -17,6 +17,7 @@ import MenuBuilder from './menu';
 import { Ipc } from './utils/ipc';
 import { Messages } from './enums/messages';
 import { first } from 'rxjs/operators';
+import fixPath from 'fix-path';
 
 const appIcon =
     process.platform === 'darwin'
@@ -30,6 +31,8 @@ export default class AppUpdater {
         autoUpdater.checkForUpdatesAndNotify();
     }
 }
+
+fixPath();
 
 let mainWindow: BrowserWindow | null = null;
 

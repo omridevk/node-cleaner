@@ -8,10 +8,10 @@ import {
     useState
 } from 'react';
 import { ProjectData } from '../types';
-import { catchError, delay, first, map, tap } from 'rxjs/operators';
+import { catchError, delay, map } from 'rxjs/operators';
 import { Drive } from '../utils/list-drives';
 import path from 'path';
-import { EMPTY, forkJoin, from } from 'rxjs';
+import {  EMPTY, from, merge, of } from 'rxjs';
 import chalk from 'chalk';
 import { ProjectStatus } from '../types/Project';
 import fs from 'fs-extra';
@@ -22,17 +22,18 @@ import checkDiskSpace, { CheckDiskSpaceResult } from 'check-disk-space';
 import ElectronStore from 'electron-store';
 import {
     compose,
-    difference,
     differenceWith,
     eqBy,
     filter,
     isEmpty,
+    isNil,
     prop,
     propEq,
     unionWith,
     uniq,
     uniqWith
 } from 'ramda';
+import { randomInt } from '../utils/random-int';
 
 const STORE_NAME = 'deleted';
 
@@ -189,7 +190,7 @@ export const useScan = (
             projects.map(project =>
                 fs
                     .pathExists(`${project.path}${path.sep}node_modules`)
-                    .then((result) => {
+                    .then(result => {
                         if (!result) {
                             return Promise.resolve(project);
                         }
@@ -197,7 +198,9 @@ export const useScan = (
                     })
             )
         ).then(results => {
-            const projects = results.filter(Boolean);
+            const projects = results
+                .filter(Boolean)
+                .filter(project => !isNil(project.path));
             setCleanedProjects(projects);
             electronStore.set('deleted', projects);
         });
@@ -220,13 +223,14 @@ export const useScan = (
         }: {
             updatedProjects: ProjectData[];
             status: ProjectStatus;
-            type?: ProjectType
+            type?: ProjectType;
         }) => {
             updatedProjects = updatedProjects.map(project => ({
                 ...project,
                 status: status
             }));
-            const updateMethod = type === ProjectType.Current ? setProjects : setCleanedProjects;
+            const updateMethod =
+                type === ProjectType.Current ? setProjects : setCleanedProjects;
             updateMethod(projects =>
                 unionWith(eqBy(prop('path')), updatedProjects, projects)
             );
@@ -252,37 +256,51 @@ export const useScan = (
                     )}`
                 )
             );
-            forkJoin(
-                demoMode
-                    ? from([0]).pipe(delay(5000))
-                    : paths.map(path =>
-                          from(fs.remove(path)).pipe(
+            const toRemove = demoMode
+                ? deletedProjects.map(project =>
+                      of(project).pipe(delay(randomInt(1000, 15000)))
+                  )
+                : paths.map(projectPath =>
+                      from(fs.remove(projectPath))
+                          .pipe(
                               catchError(e => {
                                   console.error(e);
                                   return EMPTY;
                               })
                           )
-                      )
-            )
-                .pipe(first())
-                .subscribe(
-                    () => {
-                        updateProjectsStatus({
-                            updatedProjects: deletedProjects,
-                            status: ProjectStatus.Deleted
-                        });
-                        dispatch({ type: Actions.FinishedDelete });
-                    },
-                    e => logger.error(e)
-                );
+                          .pipe(
+                              map(() =>
+                                  deletedProjects.find(
+                                      project =>
+                                          `${path.join(
+                                              project.path,
+                                              'node_modules'
+                                          )}` === projectPath
+                                  )
+                              )
+                          )
+                  );
+            merge(...toRemove).subscribe(
+                project => {
+                    updateProjectsStatus({
+                        updatedProjects: [project],
+                        status: ProjectStatus.Deleted
+                    });
+                },
+                e => logger.error(e),
+                () => {
+                    dispatch({ type: Actions.FinishedDelete });
+                    console.log('finished removing');
+                }
+            );
         },
         [dispatch, updateProjectsStatus]
     );
     useEffect(() => {
-        const history = electronStore.get('deleted', []);
+        const history = electronStore.get(STORE_NAME, []);
         const comp = (x, y) => x.path === y.path;
         electronStore.set(
-            'deleted',
+            STORE_NAME,
             differenceWith(comp, history, installedProjects)
         );
     }, [installedProjects]);

@@ -19,7 +19,6 @@ export const exec = (command: string) => {
                 observer.error(error);
                 return noop;
             }
-            console.log('hereddddee');
             observer.next({ stdout, stderr });
             return noop;
         };
