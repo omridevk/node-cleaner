@@ -1,7 +1,7 @@
 {
     "name": "node-cleaner",
     "productName": "Node Cleaner",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Application to clean unused node_modules folders to free up space.",
     "scripts": {
         "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
