@@ -122,6 +122,11 @@ function reducer(
     }
 }
 
+export enum ProjectType {
+    Stored = 'stored',
+    Current = 'current'
+}
+
 const demoMode = !!process.env.DEMO_MODE;
 
 export const useScan = (
@@ -193,7 +198,6 @@ export const useScan = (
             )
         ).then(results => {
             const projects = results.filter(Boolean);
-            console.log(projects);
             setCleanedProjects(projects);
             electronStore.set('deleted', projects);
         });
@@ -211,17 +215,19 @@ export const useScan = (
     const updateProjectsStatus = useCallback(
         ({
             updatedProjects,
-            status
+            status,
+            type = ProjectType.Current
         }: {
             updatedProjects: ProjectData[];
             status: ProjectStatus;
+            type?: ProjectType
         }) => {
             updatedProjects = updatedProjects.map(project => ({
                 ...project,
                 status: status
             }));
-
-            setProjects(projects =>
+            const updateMethod = type === ProjectType.Current ? setProjects : setCleanedProjects;
+            updateMethod(projects =>
                 unionWith(eqBy(prop('path')), updatedProjects, projects)
             );
         },
@@ -285,7 +291,6 @@ export const useScan = (
             return;
         }
         const history = electronStore.get(STORE_NAME, []);
-        console.log('here');
         electronStore.set(
             STORE_NAME,
             uniqWith(eqBy(prop('path')), [...history, ...deletedProjects])

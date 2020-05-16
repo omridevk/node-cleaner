@@ -24,7 +24,7 @@ export default function ProjectPage() {
     const { scanning, folders } = state;
 
     useEffect(() => {
-        if (scanning === ScanState.Loading) {
+        if (scanning !== ScanState.Idle) {
             return;
         }
         startScan(folders);

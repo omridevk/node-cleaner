@@ -10,7 +10,7 @@ import { Drive } from '../utils/list-drives';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import blue from '@material-ui/core/colors/blue';
 import { noop } from '../utils/helpers';
-import { useScan, State, ScanState, DeleteState } from '../hooks/useScan';
+import { useScan, State, ScanState, DeleteState, ProjectType } from '../hooks/useScan';
 import { SnackbarProvider } from 'notistack';
 import { electronStoreName, maximumSnackbars } from '../constants';
 import { ipcRenderer } from 'electron';
@@ -27,10 +27,12 @@ interface ProjectContext {
     toggleDarkMode: () => void;
     updateProjectsStatus: ({
         updatedProjects,
-        status
+        status,
+        type
     }: {
         updatedProjects: ProjectData[];
         status: ProjectStatus;
+        type?: ProjectType
     }) => void;
     resetScan: () => void;
     cleanedProjects: ProjectData[];

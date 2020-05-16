@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, Route, Switch } from 'react-router-dom';
 import { Routes as RouteList } from './constants';
 import App from './containers/App';
@@ -19,6 +19,7 @@ import HistoryIcon from '@material-ui/icons/History';
 import { ProjectDataContext } from './containers/Root';
 import { ScanState } from './hooks/useScan';
 import Typography from '@material-ui/core/Typography';
+import { useSpring, animated, useTrail, config } from 'react-spring';
 
 export const drawerWidth = 240;
 
@@ -48,9 +49,9 @@ const useStyles = makeStyles((theme: Theme) =>
         // necessary for content to be below app bar
         toolbar: {
             ...theme.mixins.toolbar,
-            display: "flex",
+            display: 'flex',
             marginLeft: 70,
-            alignItems: "center"
+            alignItems: 'center'
         },
         content: {
             flexGrow: 1
@@ -61,12 +62,24 @@ const useStyles = makeStyles((theme: Theme) =>
 export default function Routes() {
     const classes = useStyles();
     const { state } = React.useContext(ProjectDataContext);
-    let header = "";
+    const dots = useMemo(() => '...'.split(''), []);
+    const trail = useTrail(dots.length, {
+        from: {
+            opacity: 0
+        },
+        reset: true,
+        config: {
+            ...config.wobbly
+        },
+        to: { opacity: 1 }
+    });
+
+    let header = 'Node Cleaner';
     if (state.scanning === ScanState.Loading) {
-        header = "Scanning";
+        header = 'Scanning';
     }
     if (state.scanning === ScanState.Finished) {
-        header = "Finished";
+        header = 'Finished';
     }
     return (
         <div className={classes.root}>
@@ -78,8 +91,14 @@ export default function Routes() {
                 }}
                 anchor="left"
             >
-                <Typography variant='body1' className={classes.toolbar} >
-                    {header}
+                <Typography variant="body1" className={classes.toolbar}>
+                    <span>{header}</span>
+                    {state.scanning === ScanState.Loading &&
+                        trail.map((props, index) => (
+                            <animated.span key={index} style={props}>
+                                {dots[index]}
+                            </animated.span>
+                        ))}
                 </Typography>
                 <Divider />
                 <List>

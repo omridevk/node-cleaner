@@ -35,6 +35,7 @@ import { createStyles } from '@material-ui/core';
 import { ProjectStatus } from '../../types/Project';
 import { Lines } from './Lines';
 import { useInstall } from '../../hooks/useInstall';
+import { ProjectType } from '../../hooks/useScan';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -88,7 +89,8 @@ export function Table({ columns }: TableProps) {
         toggleRowExpanded(rowId, true);
         updateProjectsStatus({
             updatedProjects: [project],
-            status: ProjectStatus.Installing
+            status: ProjectStatus.Installing,
+            type: ProjectType.Stored
         });
         install(project);
     }
@@ -99,9 +101,13 @@ export function Table({ columns }: TableProps) {
                 return;
             }
             const project = projects!.find(project => project.id === id);
+            if (!project) {
+                return;
+            }
             updateProjectsStatus({
                 updatedProjects: [project],
-                status: ProjectStatus.Installed
+                status: ProjectStatus.Installed,
+                type: ProjectType.Stored
             });
         });
     }, [installData]);
