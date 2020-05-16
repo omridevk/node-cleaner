@@ -219,7 +219,7 @@ export function Table({ columns }: TableProps) {
                         <div>
                             <div>
                                 <Alert severity={'warning'}>
-                                    No Results found
+                                    History is empty
                                 </Alert>
                             </div>
                         </div>
