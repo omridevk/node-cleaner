@@ -4,13 +4,8 @@ import Snackbar from '@material-ui/core/Snackbar';
 import { ProjectData } from '../types';
 import { ProjectDataContext } from './Root';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
-import { useLocation } from 'react-router';
 import { ScanState } from '../hooks/useScan';
 import { ProjectStatus } from '../types/Project';
-import { routes } from '../constants';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import { Link } from 'react-router-dom';
 
 const Alert = (props: AlertProps) => (
     <MuiAlert elevation={6} variant="filled" {...props} />
@@ -24,12 +19,15 @@ export default function ProjectPage() {
         startScan,
         totalSizeString,
     } = useContext(ProjectDataContext);
-    const location = useLocation<{ directories: string[], history: boolean}>();
-    const { scanning } = state;
 
-    const directories = location.state.directories;
+
+    const { scanning, folders } = state;
+
     useEffect(() => {
-        startScan(directories);
+        if (scanning === ScanState.Loading) {
+            return;
+        }
+        startScan(folders);
     }, []);
     const [showSnackbar, setShowSnackbar] = useState(false);
 
@@ -40,7 +38,6 @@ export default function ProjectPage() {
         });
     }
     const finished = scanning === ScanState.Finished;
-
     useEffect(() => {
         if (finished) {
             return;

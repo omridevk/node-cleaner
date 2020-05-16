@@ -19,14 +19,50 @@ import { ProjectStatus } from '../types/Project';
 import { Finder } from '../utils/finder';
 import ElectronStore from 'electron-store';
 
-const defaultContext = {
-    state: { scanning: ScanState.Idle, deleting: DeleteState.Idle },
+interface ProjectContext {
+    projects?: ProjectData[];
+    state: State;
+    foldersScanned: number;
+    totalSpace: { free: string; size: string };
+    toggleDarkMode: () => void;
+    updateProjectsStatus: ({
+        updatedProjects,
+        status
+    }: {
+        updatedProjects: ProjectData[];
+        status: ProjectStatus;
+    }) => void;
+    resetScan: () => void;
+    cleanedProjects: ProjectData[];
+    deleteProjects: (projects: ProjectData[]) => void;
+    darkMode: boolean;
+    setFolders: (folders: string[]) => void;
+    setDrives: (drives: Drive[]) => void;
+    fetchLocalData: () => void;
+    startScan: (dir: string | string[]) => void;
+    pauseScan: () => void;
+    stopScan: () => void;
+    resumeScan: () => void;
+    totalSizeString?: string;
+    currentFolder?: string;
+}
+
+const defaultContext: ProjectContext = {
+    state: {
+        scanning: ScanState.Idle,
+        deleting: DeleteState.Idle,
+        drives: [],
+        folders: []
+    },
     projects: [],
+    cleanedProjects: [],
     darkMode: false,
     toggleDarkMode: noop,
     foldersScanned: 0,
     fetchLocalData: noop,
     resetScan: noop,
+    setDrives: noop,
+    setFolders: noop,
     updateProjectsStatus: noop,
     startScan: (_: any) => {},
     totalSpace: { free: '', size: '' },
@@ -34,36 +70,12 @@ const defaultContext = {
     stopScan: noop,
     deleteProjects: noop,
     resumeScan: noop,
-    currentFolder: '',
-    drives: [],
+    currentFolder: ''
 };
 
-export const ProjectDataContext = React.createContext<{
-    projects?: ProjectData[];
-    state: State;
-    foldersScanned: number;
-    electronStore: ElectronStore;
-    totalSpace: { free: string; size: string };
-    toggleDarkMode: () => void;
-    updateProjectsStatus: ({
-        updatedProjects,
-        status,
-    }: {
-        updatedProjects: ProjectData[];
-        status: ProjectStatus;
-    }) => void;
-    resetScan: () => void;
-    deleteProjects: (projects: ProjectData[]) => void;
-    darkMode: boolean;
-    fetchLocalData: () => void;
-    drives: Drive[];
-    startScan: (dir: string | string[]) => void;
-    pauseScan: () => void;
-    stopScan: () => void;
-    resumeScan: () => void;
-    totalSizeString?: string;
-    currentFolder?: string;
-}>(defaultContext);
+export const ProjectDataContext = React.createContext<ProjectContext>(
+    defaultContext
+);
 
 type Props = {
     store: any;
@@ -73,13 +85,13 @@ type Props = {
 
 const darkTheme = createMuiTheme({
     palette: {
-        type: 'dark',
-    },
+        type: 'dark'
+    }
 });
 const theme = createMuiTheme({
     palette: {
-        primary: blue,
-    },
+        primary: blue
+    }
 });
 
 const Root = ({ store, history, useDarkMode = false }: Props) => {
@@ -109,13 +121,15 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
         startScan,
         fetchLocalData,
         totalSpace,
+        setFolders,
+        setDrives,
+        cleanedProjects,
         resetScan,
         deleteProjects,
         foldersScanned,
         updateProjectsStatus,
         state,
-        drives,
-        totalSizeString,
+        totalSizeString
     } = useScan(finder, electronStore);
 
     return (
@@ -126,11 +140,12 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
                         <CssBaseline />
                         <ProjectDataContext.Provider
                             value={{
-                                drives,
+                                setFolders,
+                                setDrives,
                                 totalSpace,
                                 resetScan,
                                 fetchLocalData,
-                                electronStore,
+                                cleanedProjects,
                                 foldersScanned,
                                 darkMode,
                                 resumeScan,
@@ -140,10 +155,10 @@ const Root = ({ store, history, useDarkMode = false }: Props) => {
                                 stopScan,
                                 pauseScan,
                                 toggleDarkMode: () =>
-                                    setDarkMode((prevState) => !prevState),
+                                    setDarkMode(prevState => !prevState),
                                 projects,
                                 state,
-                                totalSizeString,
+                                totalSizeString
                             }}
                         >
                             <Provider store={store}>

@@ -72,7 +72,7 @@ export function Table({ columns }: TableProps) {
     const {
         toggleDarkMode,
         fetchLocalData,
-        projects,
+        cleanedProjects: projects,
         darkMode,
         updateProjectsStatus
     } = useContext(ProjectDataContext);

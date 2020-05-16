@@ -1,8 +1,8 @@
 import { Routes } from '../../constants';
 import { createStyles } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
-import { Link } from 'react-router-dom';
-import React, { useState } from 'react';
+import { Link, useHistory } from 'react-router-dom';
+import React, {  useState, MouseEvent } from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -15,6 +15,7 @@ import withStyles from '@material-ui/core/styles/withStyles';
 import CloseIcon from '@material-ui/icons/Close';
 import red from '@material-ui/core/colors/red';
 import { ScanType } from './ScanSelection';
+import DialogActions from '@material-ui/core/DialogActions';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -53,6 +54,8 @@ const useStyles = makeStyles(() =>
 interface Props {
     directories: string[];
     disabled: boolean;
+    scanning: boolean;
+    resetScan: () => void;
     scanType: ScanType;
 }
 
@@ -92,17 +95,25 @@ const DialogTitle = withStyles(styles)((props) => {
 export const ScanButton = ({
     directories,
     disabled = false,
+    scanning,
+    resetScan,
     scanType,
 }: Props) => {
     const classes = useStyles();
     const [error, setError] = useState(false);
+    const history = useHistory();
+    const [showScanError, setShowScanError] = useState(false);
 
-    function handleClick(event) {
-        if (!isEmpty(directories)) {
-            return;
+    function handleClick(event: MouseEvent) {
+        if (isEmpty(directories)) {
+            setError(true);
         }
-        setError(true);
-        event.preventDefault();
+        if (scanning) {
+            setShowScanError(true);
+        }
+        if (scanning || isEmpty(directories)) {
+            event.preventDefault();
+        }
     }
 
     return (
@@ -111,10 +122,7 @@ export const ScanButton = ({
                 onClick={handleClick}
                 aria-disabled={disabled ? 'true' : 'false'}
                 to={{
-                    pathname: Routes.PROJECTS,
-                    state: {
-                        directories,
-                    },
+                    pathname: Routes.PROJECTS
                 }}
                 className={classes.link}
             >
@@ -124,6 +132,28 @@ export const ScanButton = ({
                     </Typography>
                 </Button>
             </Link>
+            <Dialog open={showScanError}>
+                <DialogTitle onClose={() => setShowScanError(false)}>Warning</DialogTitle>
+                <DialogContent dividers={true}>
+                    <DialogContentText variant="body1">
+                        Are you sure want restart the scan?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={(() => setShowScanError(false))} variant='contained' autoFocus={true}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            resetScan();
+                            history.push(Routes.PROJECTS);
+                        }}
+                        color="primary"
+                    >
+                        Agree
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Dialog open={error}>
                 <DialogTitle onClose={() => setError(false)}>Error</DialogTitle>
                 <DialogContent dividers={true}>

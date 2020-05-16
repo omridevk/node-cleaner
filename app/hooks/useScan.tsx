@@ -33,7 +33,8 @@ import {
     uniq,
     uniqWith
 } from 'ramda';
-import { subscribeToResult } from 'rxjs/internal-compatibility';
+
+const STORE_NAME = 'deleted';
 
 export enum ScanState {
     Loading = 'loading',
@@ -50,21 +51,30 @@ export enum DeleteState {
 export interface State {
     deleting: DeleteState;
     scanning: ScanState;
+    drives: Drive[];
+    folders: string[];
 }
 
 enum Actions {
     StartScan,
     PauseScan,
     FinishedScan,
+    SetDrives,
+    SetFolders,
     Reset,
     DeleteProjects,
     FinishedDelete
 }
 
-function reducer(state: State, action: any): State {
+function reducer(
+    state: State,
+    action: { type: Actions; payload?: any }
+): State {
     switch (action.type) {
         case Actions.Reset:
             return {
+                ...state,
+                folders: [],
                 scanning: ScanState.Idle,
                 deleting: DeleteState.Idle
             };
@@ -83,11 +93,25 @@ function reducer(state: State, action: any): State {
                 ...state,
                 scanning: ScanState.Finished
             };
+        case Actions.SetFolders: {
+            const { folders } = action.payload;
+            return {
+                ...state,
+                folders
+            };
+        }
         case Actions.DeleteProjects:
             return {
                 ...state,
                 deleting: DeleteState.Deleting
             };
+        case Actions.SetDrives: {
+            const { drives } = action.payload;
+            return {
+                ...state,
+                drives
+            };
+        }
         case Actions.FinishedDelete:
             return {
                 ...state,
@@ -105,14 +129,24 @@ export const useScan = (
     electronStore: ElectronStore<{ deleted: ProjectData[] }>
 ) => {
     const [projects, setProjects] = useState<ProjectData[]>([]);
+    const [cleanedProjects, setCleanedProjects] = useState(() =>
+        electronStore.get(STORE_NAME)
+    );
     const [foldersScanned, setFoldersScanned] = useState(0);
     const [totalSpace, setTotalSpace] = useState({ free: '', size: '' });
     const folders = useRef<string | string[]>();
-    const [drives, setDrives] = useState<Drive[]>([]);
     const [state, dispatch] = useReducer(reducer, {
         scanning: ScanState.Idle,
-        deleting: DeleteState.Idle
+        deleting: DeleteState.Idle,
+        drives: [],
+        folders: []
     });
+    const setFolders = useCallback((folders: string[]) => {
+        dispatch({ type: Actions.SetFolders, payload: { folders } });
+    }, []);
+    const setDrives = useCallback((drives: Drive[]) => {
+        dispatch({ type: Actions.SetDrives, payload: { drives } });
+    }, []);
     const isDeleted = propEq('status', ProjectStatus.Deleted);
     const isInstalled = propEq('status', ProjectStatus.Installed);
     const deletedProjects = useMemo(() => filter(isDeleted, projects), [
@@ -144,8 +178,25 @@ export const useScan = (
 
     const totalSizeString = useCalculateSize(projects);
     const fetchLocalData = useCallback(() => {
-        finder.cancel();
-        setProjects(electronStore.get('deleted', []));
+        // finder.cancel();
+        // let projects = electronStore.get('deleted', []);
+        Promise.all(
+            cleanedProjects.map(project =>
+                fs
+                    .pathExists(`${project.path}${path.sep}node_modules`)
+                    .then(result => {
+                        if (!result) {
+                            return Promise.resolve(project);
+                        }
+                        return Promise.resolve(false);
+                    })
+            )
+        ).then(results => {
+            const projects = results.filter(Boolean);
+            console.log(projects);
+            setCleanedProjects(projects);
+            electronStore.set('deleted', projects);
+        });
     }, []);
     const startScan = useCallback(
         (dir: string | string[]) => {
@@ -222,9 +273,6 @@ export const useScan = (
         [dispatch, updateProjectsStatus]
     );
     useEffect(() => {
-        electronStore.openInEditor();
-    }, []);
-    useEffect(() => {
         const history = electronStore.get('deleted', []);
         const comp = (x, y) => x.path === y.path;
         electronStore.set(
@@ -236,9 +284,10 @@ export const useScan = (
         if (isEmpty(deletedProjects)) {
             return;
         }
-        const history = electronStore.get('deleted', []);
+        const history = electronStore.get(STORE_NAME, []);
+        console.log('here');
         electronStore.set(
-            'deleted',
+            STORE_NAME,
             uniqWith(eqBy(prop('path')), [...history, ...deletedProjects])
         );
     }, [deletedProjects]);
@@ -250,29 +299,29 @@ export const useScan = (
             return;
         }
         startScan(folders.current);
-    }, [dispatch, finder, folders.current]);
+    }, [finder, folders.current]);
 
     const pauseScan = useCallback(() => {
         dispatch({ type: Actions.PauseScan });
         finder.pause();
-    }, [finder, dispatch]);
+    }, [finder]);
 
     const stopScan = useCallback(() => {
         dispatch({ type: Actions.FinishedScan });
         finder.cancel();
-    }, [finder, dispatch]);
+    }, [finder]);
 
     const resumeScan = useCallback(() => {
         dispatch({ type: Actions.StartScan });
         finder.resume();
-    }, [finder, dispatch]);
+    }, [finder]);
 
     useEffect(() => {
         const sub = finder.onScanEnd.subscribe(() =>
             dispatch({ type: Actions.FinishedScan })
         );
         return () => sub.unsubscribe();
-    }, [finder, dispatch]);
+    }, [finder]);
 
     useEffect(() => {
         const sub = finder.foldersScanned$.subscribe(number =>
@@ -304,13 +353,15 @@ export const useScan = (
         updateProjectsStatus,
         totalSizeString,
         fetchLocalData,
+        setDrives,
+        setFolders,
         totalSpace,
+        cleanedProjects,
         foldersScanned,
         pauseScan,
         resumeScan,
         resetScan,
         stopScan,
-        state,
-        drives
+        state
     };
 };

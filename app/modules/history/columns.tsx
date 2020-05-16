@@ -79,7 +79,7 @@ export const defaultColumns = [
         }
     },
     {
-        Header: 'Size',
+        Header: 'Original size',
         accessor: 'size',
         sortInverted: true,
         Filter: SliderColumnFilter,
@@ -188,6 +188,25 @@ export const extraColumns = ({
                                 onInstall={onInstall}
                             />
                             <Tooltip
+                                title={`Open in ${
+                                    isDarwin ? 'finder' : 'file explorer'
+                                }`}
+                                placement="top"
+                            >
+                                <span>
+                                    <IconButton
+                                        aria-label={``}
+                                        onClick={event => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            shell.openItem(row.original.path);
+                                        }}
+                                    >
+                                        <FolderOpenIcon />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                            <Tooltip
                                 title={row.isExpanded ? 'Minimize' : 'Expand'}
                                 placement="top"
                             >
@@ -213,25 +232,6 @@ export const extraColumns = ({
                                         ) : (
                                             <ExpandLessIcon />
                                         )}
-                                    </IconButton>
-                                </span>
-                            </Tooltip>
-                            <Tooltip
-                                title={`Open in ${
-                                    isDarwin ? 'finder' : 'file explorer'
-                                }`}
-                                placement="top"
-                            >
-                                <span>
-                                    <IconButton
-                                        aria-label={``}
-                                        onClick={event => {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            shell.openItem(row.original.path);
-                                        }}
-                                    >
-                                        <FolderOpenIcon />
                                     </IconButton>
                                 </span>
                             </Tooltip>
