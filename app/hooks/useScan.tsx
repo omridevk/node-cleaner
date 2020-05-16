@@ -179,12 +179,12 @@ export const useScan = (
     const totalSizeString = useCalculateSize(projects);
     const fetchLocalData = useCallback(() => {
         // finder.cancel();
-        // let projects = electronStore.get('deleted', []);
+        let projects = electronStore.get(STORE_NAME, []);
         Promise.all(
-            cleanedProjects.map(project =>
+            projects.map(project =>
                 fs
                     .pathExists(`${project.path}${path.sep}node_modules`)
-                    .then(result => {
+                    .then((result) => {
                         if (!result) {
                             return Promise.resolve(project);
                         }
