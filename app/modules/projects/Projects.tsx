@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ProjectData } from '../../types';
 import { Table } from './Table';
 import { defaultColumns } from './columns';

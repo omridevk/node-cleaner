@@ -321,7 +321,7 @@
         "yarn": ">=0.21.3"
     },
     "browserslist": [
-        "extends browserslist-config-erb"
+        "electron > 8.0.0"
     ],
     "prettier": {
         "overrides": [
