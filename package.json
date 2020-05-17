@@ -299,7 +299,7 @@
         "electron-updater": "^4.3.1",
         "history": "^4.10.1",
         "match-sorter": "^4.1.0",
-        "notistack": "^0.9.14",
+        "notistack": "^0.9.15",
         "query-string": "^6.12.1",
         "ramda": "^0.27.0",
         "react": "^16.12.0",
