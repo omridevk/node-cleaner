@@ -192,7 +192,7 @@
         "@types/enzyme-adapter-react-16": "^1.0.6",
         "@types/fs-extra": "^9.0.1",
         "@types/get-folder-size": "^2.0.0",
-        "@types/history": "^4.7.5",
+        "@types/history": "^4.7.6",
         "@types/jest": "^25.2.2",
         "@types/match-sorter": "^4.0.0",
         "@types/node": "^14",
