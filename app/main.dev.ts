@@ -61,7 +61,7 @@ const installExtensions = async () => {
         )
     ).catch(console.log);
 };
-
+app.allowRendererProcessReuse = false;
 const createWindow = async () => {
     if (
         process.env.NODE_ENV === 'development' ||
