@@ -15,7 +15,7 @@
     },
     "license": "MIT",
     "dependencies": {
-        "drivelist": "^9.0.0",
+        "drivelist": "^9.0.2",
         "check-disk-space": "^2.1.0"
     }
 }
