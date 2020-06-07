@@ -108,10 +108,10 @@ detect-libc@^1.0.3:
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
   integrity sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=
 
-drivelist@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/drivelist/-/drivelist-9.0.0.tgz#766957fdd8fa9bb0169e881ace4be55f50bc80a7"
-  integrity sha512-DNQ1oFAv5p1+UKVkQHCYQFHolFbItxSnjcJchxrhlEkW4RSuLfC0xOnq87uM8dcMzOuPfA37SKX7HsUIpw14uA==
+drivelist@^9.0.2:
+  version "9.0.2"
+  resolved "https://registry.yarnpkg.com/drivelist/-/drivelist-9.0.2.tgz#8c7cd67b3710e4b282e7f0f35290009e63bc46e8"
+  integrity sha512-B68AttNDXsew8M2viM99I4sNMJ2T5/lZ2fDlVsEAAzaJ1pyZN2Ibhhd37LAqsNRPhhPtpyrCi9+C6AfJ2kwo4g==
   dependencies:
     bindings "^1.3.0"
     debug "^3.1.0"
