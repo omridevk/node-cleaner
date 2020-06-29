@@ -2972,7 +2972,7 @@ babel-core@^6.22.1, babel-core@^6.26.0:
     slash "^1.0.0"
     source-map "^0.5.7"
 
-babel-eslint@^10.0.3, babel-eslint@^10.1.0:
+babel-eslint@^10.1.0:
   version "10.1.0"
   resolved "https://registry.yarnpkg.com/babel-eslint/-/babel-eslint-10.1.0.tgz#6968e568a910b78fb3779cdd8b6ac2f479943232"
   integrity sha512-ifWaTHQ0ce+448CYop8AdrQiBsGrnC+bMgfyKFdi6EsPLTAWG+QfyDeM6OH+FmWnKvEq5NnBMLvlBUPKQZoDSg==
@@ -6459,12 +6459,12 @@ eslint-config-airbnb@^18.1.0:
     object.assign "^4.1.0"
     object.entries "^1.1.1"
 
-eslint-config-erb@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-erb/-/eslint-config-erb-0.3.0.tgz#54355f5730bdb0636f2ee77bf01ae2578cd26d05"
-  integrity sha512-cndLCtBXqS4wPCSJbyUSGiZ6qzgxxevcF/uYxx1EOX7WElii73xhw8PEl1fagRvAS60vF5SMYwkFUlQynWyUAQ==
+eslint-config-erb@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-erb/-/eslint-config-erb-1.0.0.tgz#f6dd13de09e3ed805b30576a6f20532e0753bf72"
+  integrity sha512-UvmtvjCxaPkYzmpDLYDjmvAxoTggpW+NWYT/Dq4QkfMPqx1nAooU+YU3QsTFrme3x3xp8fj1n3cvimO1kwxb1g==
   dependencies:
-    babel-eslint "^10.0.3"
+    babel-eslint "^10.1.0"
 
 eslint-config-prettier@^6.11.0:
   version "6.11.0"
