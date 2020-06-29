@@ -297,7 +297,7 @@
         "electron-log": "^4.2.1",
         "electron-store": "^5.2.0",
         "electron-updater": "^4.3.1",
-        "history": "^4.10.1",
+        "history": "^5.0.0",
         "match-sorter": "^4.1.0",
         "notistack": "^0.9.17",
         "query-string": "^6.13.1",
