@@ -1118,15 +1118,6 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@babel/types@^7.10.5":
-  version "7.10.5"
-  resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.10.5.tgz#d88ae7e2fde86bfbfe851d4d81afa70a997b5d15"
-  integrity sha512-ixV66KWfCI6GKoA/2H9v6bQdbfXEwwpOdQ8cRvb4F+eyvhlaHxWFMQB4+3d9QFJXZsiiiqVrewNV0DFEQpyT4Q==
-  dependencies:
-    "@babel/helper-validator-identifier" "^7.10.4"
-    lodash "^4.17.19"
-    to-fast-properties "^2.0.0"
-
 "@bcoe/v8-coverage@^0.2.3":
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
@@ -6049,14 +6040,14 @@ electron-debug@^3.1.0:
     electron-is-dev "^1.1.0"
     electron-localshortcut "^3.1.0"
 
-electron-devtools-installer@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/electron-devtools-installer/-/electron-devtools-installer-3.1.0.tgz#c7800d36ab8438b51d2e03345860f817ecb5797f"
-  integrity sha512-qZd1Aoya8YOK6QauNX92V5qyKGtb4lbs238bP+qtMBkXts24xJ/1PtOVBPvdg5w3Ts9L5o6I9sDErKuzHeJFDA==
+electron-devtools-installer@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/electron-devtools-installer/-/electron-devtools-installer-3.1.1.tgz#7b56c8c86475c5e4e10de6917d150c53c9ceb55e"
+  integrity sha512-g2D4J6APbpsiIcnLkFMyKZ6bOpEJ0Ltcc2m66F7oKUymyGAt628OWeU9nRZoh1cNmUs/a6Cls2UfOmsZtE496Q==
   dependencies:
     rimraf "^3.0.2"
     semver "^7.2.1"
-    unzip-crx "^0.2.0"
+    unzip-crx-3 "^0.2.0"
 
 electron-is-accelerator@^0.1.0:
   version "0.1.2"
@@ -9312,7 +9303,7 @@ jest-watcher@^26.1.0:
     jest-util "^26.1.0"
     string-length "^4.0.1"
 
-jest-worker@^26.0.0, jest-worker@^26.1.0:
+jest-worker@^26.1.0:
   version "26.1.0"
   resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-26.1.0.tgz#65d5641af74e08ccd561c240e7db61284f82f33d"
   integrity sha512-Z9P5pZ6UC+kakMbNJn+tA2RdVdNX5WH1x+5UCBZ9MxIK24pjYtFt96fK+UwBTrjLYm232g1xz0L3eTh51OW+yQ==
@@ -9960,11 +9951,6 @@ lodash.zip@^4.2.0:
   integrity sha1-7GZi5IlkCO1KtsVCo5kLcswIACA=
 
 "lodash@4.6.1 || ^4.16.1", lodash@^4.0.0, lodash@^4.14.0, lodash@^4.15.0, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.4, lodash@^4.17.5, lodash@~4.17.12:
-  version "4.17.19"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
-  integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
-
-lodash@^4.17.19:
   version "4.17.19"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
   integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
@@ -15297,10 +15283,10 @@ unset-value@^1.0.0:
     has-value "^0.3.1"
     isobject "^3.0.0"
 
-unzip-crx@^0.2.0:
+unzip-crx-3@^0.2.0:
   version "0.2.0"
-  resolved "https://registry.yarnpkg.com/unzip-crx/-/unzip-crx-0.2.0.tgz#4c0baa8bdac756256754beca7843c13d7b858c18"
-  integrity sha1-TAuqi9rHViVnVL7KeEPBPXuFjBg=
+  resolved "https://registry.yarnpkg.com/unzip-crx-3/-/unzip-crx-3-0.2.0.tgz#d5324147b104a8aed9ae8639c95521f6f7cda292"
+  integrity sha512-0+JiUq/z7faJ6oifVB5nSwt589v1KCduqIJupNVDoWSXZtWDmjDGO3RAEOvwJ07w90aoXoP4enKsR7ecMrJtWQ==
   dependencies:
     jszip "^3.1.0"
     mkdirp "^0.5.1"
