@@ -298,7 +298,7 @@
         "electron-store": "^5.2.0",
         "electron-updater": "^4.3.1",
         "history": "^4.10.1",
-        "match-sorter": "^4.2.0",
+        "match-sorter": "^4.2.1",
         "notistack": "^0.9.17",
         "query-string": "^6.13.1",
         "ramda": "^0.27.0",
