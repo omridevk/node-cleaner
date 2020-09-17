@@ -296,7 +296,7 @@
         "electron-debug": "^3.1.0",
         "electron-log": "^4.2.2",
         "electron-store": "^5.2.0",
-        "electron-updater": "^4.3.1",
+        "electron-updater": "^4.3.5",
         "history": "^4.10.1",
         "match-sorter": "^4.2.0",
         "notistack": "^0.9.17",
