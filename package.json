@@ -188,7 +188,7 @@
         "@babel/register": "^7.10.5",
         "@types/blueimp-md5": "^2.7.0",
         "@types/electron-store": "^3.2.0",
-        "@types/enzyme": "^3.10.5",
+        "@types/enzyme": "^3.10.7",
         "@types/enzyme-adapter-react-16": "^1.0.6",
         "@types/fs-extra": "^9.0.1",
         "@types/get-folder-size": "^2.0.0",
