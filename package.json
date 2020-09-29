@@ -300,7 +300,7 @@
         "history": "^4.10.1",
         "match-sorter": "^4.2.0",
         "notistack": "^0.9.17",
-        "query-string": "^6.13.1",
+        "query-string": "^6.13.4",
         "ramda": "^0.27.0",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
