@@ -263,7 +263,7 @@
         "readdirp": "^3.2.0",
         "redux-logger": "^3.0.6",
         "sass-loader": "^9.0.2",
-        "sinon": "^9.0.2",
+        "sinon": "^9.2.0",
         "spectron": "^11.1.0",
         "style-loader": "^1.2.1",
         "stylelint": "^13.6.1",
