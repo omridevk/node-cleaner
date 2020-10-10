@@ -247,7 +247,7 @@
         "eslint-plugin-react-hooks": "^4.0.8",
         "eslint-plugin-testcafe": "^0.2.1",
         "fbjs-scripts": "^1.2.0",
-        "file-loader": "^6.0.0",
+        "file-loader": "^6.1.1",
         "fix-path": "^3.0.0",
         "get-folder-size": "^2.0.1",
         "husky": "^4.2.0",
