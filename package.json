@@ -185,7 +185,7 @@
         "@babel/preset-env": "^7.10.4",
         "@babel/preset-react": "^7.10.4",
         "@babel/preset-typescript": "^7.10.4",
-        "@babel/register": "^7.10.5",
+        "@babel/register": "^7.12.1",
         "@types/blueimp-md5": "^2.7.0",
         "@types/electron-store": "^3.2.0",
         "@types/enzyme": "^3.10.5",
