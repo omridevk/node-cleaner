@@ -272,7 +272,7 @@
         "terser-webpack-plugin": "^3.0.7",
         "testcafe": "^1.8.8",
         "testcafe-browser-provider-electron": "^0.0.15",
-        "testcafe-react-selectors": "^4.0.0",
+        "testcafe-react-selectors": "^4.1.0",
         "typed-css-modules-webpack-plugin": "^0.2.0",
         "typescript": "^3.9.7",
         "url-loader": "^4.1.0",
